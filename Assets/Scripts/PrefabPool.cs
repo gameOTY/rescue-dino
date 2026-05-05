@@ -9,29 +9,19 @@ using UnityEngine.Pool;
 
 public class PrefabPool : MonoBehaviour
 {
-    // -----------------------------------------------------------------------
-    // FIELDS
-    // -----------------------------------------------------------------------
-
     [Header("Prefab")]
-    // Drag any prefab here. PrefabPool owns all spawning —
-    // callers never call Instantiate directly.
     [SerializeField] private GameObject prefab;
 
     [Header("Pool Settings")]
-
     [SerializeField] private bool collectionCheck = true;
-
     [SerializeField] private int defaultCapacity = 10;
-
     [SerializeField] private int maxSize = 20;
 
-
-    private UnityEngine.Pool.ObjectPool<GameObject> objectPool;
+    private ObjectPool<GameObject> objectPool;
 
     private void Awake()
     {
-        objectPool = new UnityEngine.Pool.ObjectPool<GameObject>(
+        objectPool = new ObjectPool<GameObject>(
             CreateObject,
             OnGetFromPool,
             OnReleaseToPool,
@@ -57,17 +47,21 @@ public class PrefabPool : MonoBehaviour
     private GameObject CreateObject()
     {
         GameObject instance = Instantiate(prefab);
+        instance.SetActive(false);
 
-        if (instance.TryGetComponent<SoliderController>(out var soldier))
+        if (instance.TryGetComponent<SoliderController>(out SoliderController soldier))
+        {
             soldier.SetPool(this);
+        }
 
-        if (instance.TryGetComponent<DangerZoneController>(out var zone))
+        if (instance.TryGetComponent<DangerZoneController>(out DangerZoneController zone))
+        {
             zone.SetPool(this);
+        }
 
         return instance;
     }
 
-    // Called every time a bullet is rented out — make it visible and active.
     private void OnGetFromPool(GameObject gameObject)
     {
         gameObject.SetActive(true);

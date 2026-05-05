@@ -1,44 +1,65 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
-[RequireComponent(typeof(CircleCollider2D))]
 public class SoliderController : MonoBehaviour
 {
-  [SerializeField] private float rescueRange = 0.2f; // Radius within which the soldier can rescue the player
+  public enum RescueSoliderResult { Rescued, Dead }
 
-  [SerializeField] private float lifetime = 3f; // 3 seconds before returning to pool
+  [SerializeField] private float lifetime = 10f;
 
-  [SerializeField] private GameManager gameManager;
-
+  private bool isCompleted;
+  private int currentTransitionId;
   private PrefabPool objectPool;
-
-  private CircleCollider2D soldierCollider;
-
   private Coroutine lifetimeCoroutine;
 
-  public void SetPool(PrefabPool pool)
+  public event Action<SoliderController, RescueSoliderResult> Completed;
+
+  /// <summary>
+  /// Rescue duration is read by RescueZoneController child. Set during Initialize.
+  /// </summary>
+  public float RescueDuration { get; private set; }
+
+  public void SetPool(PrefabPool pool) => objectPool = pool;
+
+  public void Initialize(float rescueDuration)
   {
-    objectPool = pool;
+    RescueDuration = rescueDuration;
+    currentTransitionId++;
+    isCompleted = false;
+    lifetimeCoroutine = StartCoroutine(LifetimeCountdown());
   }
 
-
-  private void OnEnable()
+  /// <summary>
+  /// Called by RescueZoneController when player holds interaction long enough.
+  /// </summary>
+  public void HandleAuthoritativeRescue()
   {
-    lifetimeCoroutine = StartCoroutine(ReturnToPool());
+    StopCoroutineSafe(ref lifetimeCoroutine);
+    Complete(RescueSoliderResult.Rescued);
   }
 
-  private IEnumerator ReturnToPool()
+  private void OnDisable()
+  {
+    StopCoroutineSafe(ref lifetimeCoroutine);
+    currentTransitionId = 0;
+  }
+
+  private IEnumerator LifetimeCountdown()
   {
     yield return new WaitForSeconds(lifetime);
-
-    gameManager.OnPlayerFailRescue();
-    Release();
+    Complete(RescueSoliderResult.Dead);
   }
 
-  public void Rescue()
+  private void Complete(RescueSoliderResult result)
   {
-    if (lifetimeCoroutine != null)
-      StopCoroutine(lifetimeCoroutine);
+    if (isCompleted) return;
+
+    isCompleted = true;
+    currentTransitionId++;
+    StopCoroutineSafe(ref lifetimeCoroutine);
+
+    Completed?.Invoke(this, result);
     Release();
   }
 
@@ -50,25 +71,10 @@ public class SoliderController : MonoBehaviour
       gameObject.SetActive(false);
   }
 
-  void Awake()
+  private void StopCoroutineSafe(ref Coroutine coroutine)
   {
-    soldierCollider = GetComponent<CircleCollider2D>();
-    if (soldierCollider == null)
-      Debug.LogError("No CircleCollider2D found on SoliderController.");
-
-    soldierCollider.radius = rescueRange * Mathf.Max(transform.localScale.x, transform.localScale.y);
+    if (coroutine == null) return;
+    StopCoroutine(coroutine);
+    coroutine = null;
   }
-
-  // Start is called once before the first execution of Update after the MonoBehaviour is created
-  void Start()
-  {
-
-  }
-
-  // Update is called once per frame
-  void Update()
-  {
-
-  }
-
 }

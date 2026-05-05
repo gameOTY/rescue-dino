@@ -1,41 +1,49 @@
-// DangerZoneSpawner.cs
-// ABOUTME: Spawns danger zones every 2 seconds on random floor tiles.
-// Respects a max-active cap of 5 and stops spawning on game over / win.
-// Sizes each zone to 2x the player's world-space CircleCollider2D radius.
-
 using System.Collections;
 using UnityEngine;
 
 public class DangerZoneSpawner : MonoBehaviour
 {
+    [Header("References")]
+    [SerializeField] private TilemapSpawnArea spawnArea;
     [SerializeField] private PrefabPool dangerZonePool;
     [SerializeField] private GameManager gameManager;
-    [SerializeField] private float spawnInterval = 2f;
-    [SerializeField] private int maxActiveZones = 5;
+    [SerializeField] private GameObject player;
 
-    private Transform player;
-    private CircleCollider2D playerCollider;
+    [Header("Danger Zone Rules")]
+    [SerializeField] private float dangerZoneSpawnInterval = 2f;
+    [SerializeField] private float dangerZoneLifetime = 3f;
+    [SerializeField] private int maxActiveDangerZones = 5;
 
-    private void Start()
+    private Coroutine spawnCoroutine;
+
+    private void OnEnable()
     {
-        if (gameManager == null)
-            gameManager = FindObjectOfType<GameManager>();
+        spawnCoroutine = StartCoroutine(SpawnLoop());
+    }
 
-        GameObject playerObj = GameObject.FindWithTag("Player");
-        player = playerObj.transform;
-        playerCollider = playerObj.GetComponent<CircleCollider2D>();
-
-        StartCoroutine(SpawnLoop());
+    private void OnDisable()
+    {
+        if (spawnCoroutine != null)
+        {
+            StopCoroutine(spawnCoroutine);
+            spawnCoroutine = null;
+        }
     }
 
     private IEnumerator SpawnLoop()
     {
-        while (true)
+        while (!gameManager.IsTerminal)
         {
-            yield return new WaitForSeconds(spawnInterval);
+            yield return new WaitForSeconds(dangerZoneSpawnInterval);
 
-            if (gameManager.isGameOver || gameManager.isWon) continue;
-            if (dangerZonePool.CountActive >= maxActiveZones) continue;
+            if (!spawnArea.IsReady)
+            {
+                yield return null;
+                continue;
+            }
+
+            if (dangerZonePool.CountActive >= maxActiveDangerZones)
+                continue;
 
             SpawnZone();
         }
@@ -43,17 +51,19 @@ public class DangerZoneSpawner : MonoBehaviour
 
     private void SpawnZone()
     {
-        // World-space radius accounts for non-unit player scale
-        float worldRadius = playerCollider.radius
-            * Mathf.Max(player.localScale.x, player.localScale.y);
-        float sideLength = 2f * worldRadius;
+        if (!spawnArea.GetRandomWalkablePosition(out Vector3 position))
+            return;
 
-        // Random floor tile — exclude wall border (col/row 0 and mapWidth/Height-1)
-        int col = Random.Range(1, gameManager.MapWidth - 1);
-        int row = Random.Range(1, gameManager.MapHeight - 1);
+        var zone = dangerZonePool.Get();
+        zone.transform.position = position;
+        var dangerZoneController = zone.GetComponent<DangerZoneController>();
+        dangerZoneController.Initialize(dangerZoneLifetime);
+        dangerZoneController.PlayerDamaged += OnDangerZonePlayerDamaged;
+    }
 
-        GameObject zone = dangerZonePool.Get();
-        zone.transform.position = new Vector3(col, row, 0f);
-        zone.transform.localScale = new Vector3(sideLength, sideLength, 1f);
+    private void OnDangerZonePlayerDamaged(DangerZoneController dangerZone)
+    {
+        dangerZone.PlayerDamaged -= OnDangerZonePlayerDamaged;
+        gameManager.RegisterDamage(1, "Player entered a danger zone");
     }
 }

@@ -67,5 +67,5 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "GDEV-B3_GDEV-011_NguyenCongKhanh.slnx"
+    "dotnet.defaultSolution": "rescue-dino.slnx"
 }

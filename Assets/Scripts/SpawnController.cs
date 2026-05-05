@@ -1,46 +1,49 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class SpawnController : MonoBehaviour
 {
-    [SerializeField]
-    private PrefabPool soliderPool;
-
-    [SerializeField] private GameObject player;
-
+    [Header("References")]
+    [SerializeField] private TilemapSpawnArea spawnArea;
+    [SerializeField] private PrefabPool soliderPool;
     [SerializeField] private GameManager gameManager;
 
-    [SerializeField] private float spawnInterval = 1f;
-
-    [SerializeField] private float increasingDifficultyRate = 0.1f; // How much to decrease spawn interval per second
+    [Header("Solider Spawn Settings")]
+    [SerializeField] private float spawnInterval = 5f;
+    [SerializeField] private float spawnIntervalDecayPerSecond = 0.1f;
+    [SerializeField] private float minimumSpawnInterval = 0.5f;
 
     [SerializeField] private int maxActiveSoldiers = 3;
 
+    [SerializeField] private float rescueDuration = 3f;
 
-    void Start()
-    {
-        if (player == null)
-        {
-            Debug.LogError("Player reference not set on SpawnController.");
-            player = GameObject.FindWithTag("Player");
-        }
+    private int activeTargetCount;
+    private readonly HashSet<Vector3Int> occupiedCells = new();
 
-        if (gameManager == null)
-            gameManager = FindObjectOfType<GameManager>();
-    }
+    private Coroutine spawnCoroutine;
 
     private void OnEnable()
     {
-        StartCoroutine(Spawn());
+        spawnCoroutine = StartCoroutine(SpawnLoop());
     }
 
-    private void Update()
+    private void OnDisable()
     {
-        // Gradually increase difficulty by decreasing spawn interval over time.
-        spawnInterval = Mathf.Max(0.1f, spawnInterval - increasingDifficultyRate * Time.deltaTime);
+        if (spawnCoroutine != null)
+        {
+            StopCoroutine(spawnCoroutine);
+            spawnCoroutine = null;
+        }
     }
 
-    private IEnumerator Spawn()
+    private float GetCurrentSpawnInterval()
+    {
+        float elapsedTime = Time.timeSinceLevelLoad;
+        return Mathf.Max(minimumSpawnInterval, spawnInterval - spawnIntervalDecayPerSecond * elapsedTime);
+    }
+
+    private IEnumerator SpawnLoop()
     {
         if (soliderPool == null)
         {
@@ -48,22 +51,74 @@ public class SpawnController : MonoBehaviour
             yield break;
         }
 
-        while (true)
+        while (!gameManager.IsTerminal)
         {
-            yield return new WaitForSeconds(spawnInterval);
+            yield return new WaitForSeconds(GetCurrentSpawnInterval());
 
-            if (soliderPool.CountActive >= maxActiveSoldiers) continue;
+            if (!spawnArea.IsReady)
+            {
+                yield return null;
+                continue;
+            }
 
-            var spawnedObject = soliderPool.Get();
-            spawnedObject.transform.position = GetSpawnPosition();
+            if (activeTargetCount >= maxActiveSoldiers)
+            {
+                continue;
+            }
+
+            SpawnSoldier();
         }
     }
 
-    private Vector3 GetSpawnPosition()
+    private void SpawnSoldier()
     {
-        Bounds floor = gameManager.FloorBounds;
-        float spawnX = Random.Range(floor.min.x, floor.max.x);
-        float spawnY = Random.Range(floor.min.y, floor.max.y);
-        return new Vector3(spawnX, spawnY, 0);
+        if (activeTargetCount >= maxActiveSoldiers)
+        {
+            return;
+        }
+
+        bool hasPosition = spawnArea.GetRandomWalkablePosition(
+                out Vector3 spawnPosition,
+                occupiedCells
+            );
+
+        if (!hasPosition)
+        {
+            Debug.LogWarning("Cannot spawn target. No valid spawn position.");
+            return;
+        }
+
+        activeTargetCount++;
+        Vector3Int spawnCell = spawnArea.WorldToCell(spawnPosition);
+        occupiedCells.Add(spawnCell);
+
+        GameObject spawnedObject = soliderPool.Get();
+        spawnedObject.transform.position = spawnPosition;
+        var targetController = spawnedObject.GetComponent<SoliderController>();
+        targetController.Initialize(rescueDuration);
+        targetController.Completed += OnTargetCompleted;
+    }
+
+
+    private void OnTargetCompleted(SoliderController target, SoliderController.RescueSoliderResult result)
+    {
+        Debug.Log($"[SpawnController] OnTargetCompleted {result} at {target.transform.position}", target);
+        target.Completed -= OnTargetCompleted;
+
+        Vector3Int targetCell = spawnArea.WorldToCell(target.transform.position);
+        occupiedCells.Remove(targetCell);
+
+        activeTargetCount--;
+
+        switch (result)
+        {
+            case SoliderController.RescueSoliderResult.Rescued:
+                gameManager.RegisterRescued();
+                break;
+
+            case SoliderController.RescueSoliderResult.Dead:
+                gameManager.RegisterDead();
+                break;
+        }
     }
 }

@@ -1,73 +1,94 @@
+using System;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    [SerializeField] private float surviveDuration = 60f;
+  [Header("Game Rules")]
+  [SerializeField] private float surviveDuration = 60f;
+  [SerializeField] private int maxSoldierDeaths = 3;
 
-    [Header("Map Dimensions")]
-    [SerializeField] private int mapWidth = 20;
-    [SerializeField] private int mapHeight = 20;
+  public float PlayerHealth { get; private set; }
+  public int SoldiersRescued { get; private set; }
+  public int SoldiersDied { get; private set; }
+  public float TimeRemaining { get; private set; }
+  public bool IsGameOver { get; private set; }
+  public bool IsWon { get; private set; }
+  public bool IsTerminal => IsGameOver || IsWon;
 
-    public Vector2 MapCenter => new Vector2((mapWidth - 1) / 2f, (mapHeight - 1) / 2f);
-    public int MapWidth => mapWidth;
-    public int MapHeight => mapHeight;
 
-    // Floor tiles occupy cols 1..(mapWidth-2), rows 1..(mapHeight-2) in world space
-    public Bounds FloorBounds => new Bounds(
-        new Vector3(MapCenter.x, MapCenter.y, 0),
-        new Vector3(mapWidth - 2, mapHeight - 2, 0)
-    );
+  // ─── Lifecycle ─────────────────────────────────────────
 
-    public float playerHealth = 3f;
-    public int soldiersRescued { get; private set; }
-    public int soldiersDied { get; private set; }
-    public float timeRemaining { get; private set; }
-    public bool isGameOver { get; private set; }
-    public bool isWon { get; private set; }
+  private void Awake()
+  {
+    ResetRuntimeState();
+  }
 
-    void Start()
+  private void Update()
+  {
+    if (IsTerminal) return;
+
+    TimeRemaining -= Time.deltaTime;
+    if (TimeRemaining <= 0f)
     {
-        timeRemaining = surviveDuration;
+      TimeRemaining = 0f;
+      IsWon = true;
     }
+  }
 
-    void Update()
+  public void ResetRuntimeState()
+  {
+    PlayerHealth = maxSoldierDeaths;
+    SoldiersRescued = 0;
+    SoldiersDied = 0;
+    TimeRemaining = surviveDuration;
+    IsGameOver = false;
+    IsWon = false;
+  }
+
+  // ─── Events ─────────────────────────────────────────────
+
+  public event Action<int> RescuedChanged;
+  public event Action<int> DeadChanged;
+  public event Action GameOver;
+
+  public void RegisterRescued()
+  {
+    if (IsGameOver) return;
+
+    ++SoldiersRescued;
+    RescuedChanged?.Invoke(SoldiersRescued);
+  }
+
+  public void RegisterDead()
+  {
+    if (IsGameOver) return;
+
+    ++SoldiersDied;
+    Debug.Log($"[GameManager] Player lost health! Reason: Soldier died. SoldiersDied={SoldiersDied}/{maxSoldierDeaths}");
+    DeadChanged?.Invoke(SoldiersDied);
+
+    if (SoldiersDied >= maxSoldierDeaths)
+      TriggerGameOver();
+  }
+
+  public void RegisterDamage(int amount, string reason = "unknown")
+  {
+    if (IsTerminal) return;
+
+    PlayerHealth -= amount;
+    Debug.Log($"[GameManager] Player lost {amount} health! Reason: {reason}. PlayerHealth={PlayerHealth}");
+    if (PlayerHealth <= 0)
     {
-        if (isGameOver || isWon) return;
-
-        timeRemaining -= Time.deltaTime;
-        if (timeRemaining <= 0f)
-        {
-            timeRemaining = 0f;
-            isWon = true;
-            Debug.Log("You Win!");
-        }
+      PlayerHealth = 0;
+      TriggerGameOver();
     }
+  }
 
-    void OnEnable()
-    {
-        PlayerController.OnSoldierRescued += OnPlayerRescueSoldier;
-    }
+  private void TriggerGameOver()
+  {
+    if (IsGameOver) return;
 
-    void OnDisable()
-    {
-        PlayerController.OnSoldierRescued -= OnPlayerRescueSoldier;
-    }
-
-    public void OnPlayerRescueSoldier()
-    {
-        soldiersRescued++;
-        Debug.Log("Soldiers rescued: " + soldiersRescued);
-    }
-
-    public void OnPlayerFailRescue()
-    {
-        soldiersDied++;
-        playerHealth -= 1f;
-        Debug.Log("Soldiers died: " + soldiersDied + " | Health: " + playerHealth);
-        if (playerHealth <= 0f)
-        {
-            isGameOver = true;
-            Debug.Log("Game Over!");
-        }
-    }
+    IsGameOver = true;
+    GameOver?.Invoke();
+  }
 }

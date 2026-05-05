@@ -8,6 +8,9 @@ public class MapGenerator : MonoBehaviour
   [SerializeField] private Tilemap floorTilemap;
   [SerializeField] private Tilemap wallTilemap;
 
+  public int MapWidth => mapWidth;
+  public int MapHeight => mapHeight;
+
   [Header("Tile Assets")]
   [SerializeField] private TileBase floorTile;
   [SerializeField] private TileBase wallTile;
@@ -29,12 +32,8 @@ public class MapGenerator : MonoBehaviour
 
   private void Start()
   {
-    floorTilemap.ClearAllTiles();
-    wallTilemap.ClearAllTiles();
-
-    GenerateMap();
+    // Tiles cleared by SceneBootstrap before GenerateMap — no need to clear here.
   }
-
 
   private bool IsFloor(int row, int col)
   {
@@ -76,8 +75,9 @@ public class MapGenerator : MonoBehaviour
     Debug.Log("Room layout:\n" + layoutStr);
   }
 
-  private void GenerateMap()
+  public void GenerateMap()
   {
+    Debug.Log($"[MapGenerator] GenerateMap called. floorTilemap={(floorTilemap != null)}, floorTile={(floorTile != null)}");
     var floorTiles = new TileBase[mapWidth * mapHeight];
     var wallTiles = new TileBase[mapWidth * mapHeight];
 
@@ -85,7 +85,8 @@ public class MapGenerator : MonoBehaviour
       for (int col = 0; col < mapWidth; col++)
       {
         int i = row * mapWidth + col;
-        floorTiles[i] = floorTile;
+        if (roomLayout[row, col] == 'F')
+          floorTiles[i] = floorTile;
         if (roomLayout[row, col] == 'W')
           wallTiles[i] = wallTile;
       }

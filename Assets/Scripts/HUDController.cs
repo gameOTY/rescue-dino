@@ -3,26 +3,31 @@ using UnityEngine;
 
 public class HUDController : MonoBehaviour
 {
-    [SerializeField] private GameManager gameManager;
-
-    [SerializeField] private TMP_Text rescuedText;
+  [SerializeField] private GameManager gameManager;
+  [SerializeField] private TMP_Text rescuedText;
     [SerializeField] private TMP_Text diedText;
     [SerializeField] private TMP_Text timerText;
+  [SerializeField] private TMP_Text playerHealthText;
 
-    [Header("End Screens")]
+  [Header("End Screens")]
     [SerializeField] private GameObject winPanel;
     [SerializeField] private GameObject losePanel;
 
-    void Update()
+  private void Update()
+  {
+    rescuedText.text = "Rescued: " + gameManager.SoldiersRescued;
+    diedText.text = "Died: " + gameManager.SoldiersDied;
+    timerText.text = "Time: " + Mathf.CeilToInt(gameManager.TimeRemaining) + "s";
+    playerHealthText.text = "Health: " + gameManager.PlayerHealth;
+
+    if (winPanel != null)
     {
-        rescuedText.text = "Rescued: " + gameManager.soldiersRescued;
-        diedText.text = "Died: " + gameManager.soldiersDied;
-        timerText.text = "Time: " + Mathf.CeilToInt(gameManager.timeRemaining) + "s";
-
-        if (winPanel != null)
-            winPanel.SetActive(gameManager.isWon);
-
-        if (losePanel != null)
-            losePanel.SetActive(gameManager.isGameOver);
+      winPanel.SetActive(gameManager.IsWon);
     }
+
+    if (losePanel != null)
+    {
+      losePanel.SetActive(gameManager.IsGameOver);
+    }
+  }
 }
