@@ -371,6 +371,12 @@ MonoBehaviour:
   playerHealthText: {fileID: 1788271150}
   winPanel: {fileID: 2077423080}
   losePanel: {fileID: 172678179}
+  rescuedRect: {fileID: 0}
+  diedRect: {fileID: 0}
+  timerRect: {fileID: 0}
+  playerHealthRect: {fileID: 0}
+  winPanelRect: {fileID: 0}
+  losePanelRect: {fileID: 0}
 --- !u!114 &264822804
 MonoBehaviour:
   m_ObjectHideFlags: 0
