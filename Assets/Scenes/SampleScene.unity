@@ -1546,8 +1546,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MapGenerator
   floorTilemap: {fileID: 1960307466}
   wallTilemap: {fileID: 811611609}
-  floorTile: {fileID: 11400000, guid: 3fc391031a6284a6dbe05eacd62542c1, type: 2}
-  wallTile: {fileID: 11400000, guid: 4fd86aeb9332f4523948ca9e85f7f417, type: 2}
+  floorTile: {fileID: 11400000, guid: c85641d06cdc742a5901b62b80e807fa, type: 2}
+  wallTile: {fileID: 11400000, guid: 513661d99ba784d89af727a2b1984d85, type: 2}
   mapWidth: 20
   mapHeight: 20
 --- !u!156049354 &1565536675
@@ -2459,6 +2459,10 @@ PrefabInstance:
       propertyPath: gameManager
       value: 
       objectReference: {fileID: 1947231274}
+    - target: {fileID: 5112973216016848353, guid: 6b5a748b2a1104ad596c3b8c1b8ef934, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -3890830800090718979, guid: 4c87a6310f87c47f1b785669e6191f00, type: 3}
     - target: {fileID: 7399261183758058169, guid: 6b5a748b2a1104ad596c3b8c1b8ef934, type: 3}
       propertyPath: m_Name
       value: Player

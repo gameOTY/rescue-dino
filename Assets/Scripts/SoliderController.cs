@@ -7,6 +7,7 @@ public class SoliderController : MonoBehaviour
   public enum RescueSoliderResult { Rescued, Dead }
 
   [SerializeField] private float lifetime = 10f;
+  [SerializeField] private Animator animator;
 
   private bool isCompleted;
   private int currentTransitionId;
@@ -28,6 +29,9 @@ public class SoliderController : MonoBehaviour
     currentTransitionId++;
     isCompleted = false;
     lifetimeCoroutine = StartCoroutine(LifetimeCountdown());
+
+    if (animator == null)
+      animator = GetComponent<Animator>();
   }
 
   /// <summary>
@@ -58,6 +62,9 @@ public class SoliderController : MonoBehaviour
     isCompleted = true;
     currentTransitionId++;
     StopCoroutineSafe(ref lifetimeCoroutine);
+
+    if (animator != null)
+      animator.SetTrigger(result == RescueSoliderResult.Rescued ? "Rescued" : "Dead");
 
     Completed?.Invoke(this, result);
     Release();

@@ -1,9 +1,12 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-
 [RequireComponent(typeof(Rigidbody2D))]
+
+[RequireComponent(typeof(Animator))]
 public class PlayerController : MonoBehaviour
 {
+  private static readonly int DeathHash = Animator.StringToHash("Death");
+  private static readonly int SpeedHash = Animator.StringToHash("Speed");
   [SerializeField] private float moveSpeed = 5f;
   [SerializeField] private float arrivalThreshold = 0.1f;
   [SerializeField] private Camera mainCamera;
@@ -13,6 +16,11 @@ public class PlayerController : MonoBehaviour
 
   [SerializeField] private LayerMask obstacleLayer;
   [SerializeField] private float skinWidth = 0.02f;
+  [SerializeField] private Animator playerAnimator;
+  [SerializeField] private SpriteRenderer spriteRenderer;
+
+  private Vector3 _lastPosition;
+  private Vector2 _facingDir;
 
   private readonly RaycastHit2D[] castHits = new RaycastHit2D[8];
   private ContactFilter2D movementFilter;
@@ -46,6 +54,9 @@ public class PlayerController : MonoBehaviour
 
     if (mainCamera == null)
       mainCamera = Camera.main;
+
+    playerAnimator = GetComponent<Animator>();
+    spriteRenderer = GetComponent<SpriteRenderer>();
   }
 
   public void Initialize()
@@ -76,6 +87,15 @@ public class PlayerController : MonoBehaviour
     }
 
     MoveTowardTargetWithCollision();
+
+    if (_facingDir.x > 0.01f)
+      spriteRenderer.flipX = false;
+    else if (_facingDir.x < -0.01f)
+      spriteRenderer.flipX = true;
+
+    bool isMoving = Vector3.Distance(rb.position, _lastPosition) > 0.01f;
+    _lastPosition = rb.position;
+    SetAnimation(isMoving ? "Run" : "Idle");
   }
 
   private void MoveTowardTargetWithCollision()
@@ -91,6 +111,7 @@ public class PlayerController : MonoBehaviour
     }
 
     Vector2 direction = toTarget.normalized;
+    _facingDir = direction;
 
     float moveDistance = moveSpeed * Time.fixedDeltaTime;
     moveDistance = Mathf.Min(moveDistance, distanceToTarget);
@@ -134,5 +155,17 @@ public class PlayerController : MonoBehaviour
     }
 
     return closestDistance;
+  }
+
+  private void SetAnimation(string state)
+  {
+    if (playerAnimator == null) return;
+    playerAnimator.SetFloat(SpeedHash, state == "Run" ? 1f : 0f);
+  }
+
+  public void TriggerDeath()
+  {
+    if (playerAnimator != null)
+      playerAnimator.SetTrigger(DeathHash);
   }
 }

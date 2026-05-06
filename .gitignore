@@ -102,3 +102,7 @@ InitTestScene*.unity*
 .dolt/
 *.db
 .beads-credential-key
+
+.omc
+.serena
+.uloop
