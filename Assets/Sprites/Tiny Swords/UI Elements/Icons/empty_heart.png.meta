@@ -1,17 +1,10 @@
 fileFormatVersion: 2
-guid: 611d68563116f412abd347fb93660868
-AssetOrigin:
-  serializedVersion: 1
-  productId: 352566
-  packageName: Tiny Swords
-  packageVersion: 1.0
-  assetPath: Assets/Tiny Swords/UI Elements/Bars/SmallBar_Fill.png
-  uploadId: 844324
+guid: 34320049dd23f4b2887c96e2a8a81d0d
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -4072196366049256429
-    second: SmallBar_Fill_0
+      213: 2111727716445480112
+    second: empty_heart_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -56,10 +49,10 @@ TextureImporter:
   spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
-  alignment: 9
-  spritePivot: {x: 0.49999997, y: 0.5067204}
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 64
-  spriteBorder: {x: 0, y: 31, z: 0, w: 30}
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
@@ -108,7 +101,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 0
+    textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -120,23 +113,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: SmallBar_Fill_0
+      name: empty_heart_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 64
-        height: 64
+        x: 7
+        y: 9
+        width: 50
+        height: 46
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 31c5ff10bf6ac77c0800000000000000
-      internalID: -4072196366049256429
+      spriteID: 0b464117b2d5e4d10800000000000000
+      internalID: 2111727716445480112
       vertices: []
       indices: 
       edges: []
@@ -146,7 +139,7 @@ TextureImporter:
     physicsShape: []
     bones: []
     spriteID: 5e97eb03825dee720800000000000000
-    internalID: 1537655665
+    internalID: 0
     vertices: []
     indices: 
     edges: []
@@ -155,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      SmallBar_Fill_0: -4072196366049256429
+      empty_heart_0: 2111727716445480112
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
