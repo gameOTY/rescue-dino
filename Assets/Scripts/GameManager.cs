@@ -15,6 +15,11 @@ public class GameManager : MonoBehaviour
   public bool IsWon { get; private set; }
   public bool IsTerminal => IsGameOver || IsWon;
 
+  public float MaxHealth => maxSoldierDeaths;
+  public float TotalTime => surviveDuration;
+  public float NormalizedHealth => PlayerHealth / maxSoldierDeaths;
+  public float NormalizedTime => TimeRemaining / surviveDuration;
+
 
   // ─── Lifecycle ─────────────────────────────────────────
 
@@ -63,12 +68,10 @@ public class GameManager : MonoBehaviour
   {
     if (IsGameOver) return;
 
+    RegisterDamage(1, "soldier died");
     ++SoldiersDied;
     Debug.Log($"[GameManager] Player lost health! Reason: Soldier died. SoldiersDied={SoldiersDied}/{maxSoldierDeaths}");
     DeadChanged?.Invoke(SoldiersDied);
-
-    if (SoldiersDied >= maxSoldierDeaths)
-      TriggerGameOver();
   }
 
   public void RegisterDamage(int amount, string reason = "unknown")
