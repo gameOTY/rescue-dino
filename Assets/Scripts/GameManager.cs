@@ -52,8 +52,6 @@ public class GameManager : MonoBehaviour
 
   // ─── Events ─────────────────────────────────────────────
 
-  public event Action<int> RescuedChanged;
-  public event Action<int> DeadChanged;
   public event Action GameOver;
 
   public void RegisterRescued()
@@ -61,17 +59,14 @@ public class GameManager : MonoBehaviour
     if (IsGameOver) return;
 
     ++SoldiersRescued;
-    RescuedChanged?.Invoke(SoldiersRescued);
   }
 
   public void RegisterDead()
   {
     if (IsGameOver) return;
 
-    RegisterDamage(1, "soldier died");
     ++SoldiersDied;
-    Debug.Log($"[GameManager] Player lost health! Reason: Soldier died. SoldiersDied={SoldiersDied}/{maxSoldierDeaths}");
-    DeadChanged?.Invoke(SoldiersDied);
+    RegisterDamage(1, "soldier died");
   }
 
   public void RegisterDamage(int amount, string reason = "unknown")
@@ -79,7 +74,6 @@ public class GameManager : MonoBehaviour
     if (IsTerminal) return;
 
     PlayerHealth -= amount;
-    Debug.Log($"[GameManager] Player lost {amount} health! Reason: {reason}. PlayerHealth={PlayerHealth}");
     if (PlayerHealth <= 0)
     {
       PlayerHealth = 0;

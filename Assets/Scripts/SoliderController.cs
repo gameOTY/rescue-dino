@@ -10,6 +10,7 @@ public class SoliderController : MonoBehaviour
   [SerializeField] private Animator animator;
 
   private bool isCompleted;
+  private bool isInitialized;
   private int currentTransitionId;
   private PrefabPool objectPool;
   private Coroutine lifetimeCoroutine;
@@ -25,9 +26,10 @@ public class SoliderController : MonoBehaviour
 
   public void Initialize(float rescueDuration)
   {
+    isInitialized = true;
+    isCompleted = false;
     RescueDuration = rescueDuration;
     currentTransitionId++;
-    isCompleted = false;
     lifetimeCoroutine = StartCoroutine(LifetimeCountdown());
 
     if (animator == null)
@@ -45,7 +47,11 @@ public class SoliderController : MonoBehaviour
 
   private void OnDisable()
   {
-    StopCoroutineSafe(ref lifetimeCoroutine);
+    if (!isInitialized) return;
+    if (!isCompleted)
+    {
+      Complete(RescueSoliderResult.Dead);
+    }
     currentTransitionId = 0;
   }
 

@@ -2,14 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(SoldierTracker))]
 public class SpawnController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private TilemapSpawnArea spawnArea;
     [SerializeField] private PrefabPool soliderPool;
     [SerializeField] private GameManager gameManager;
+  [SerializeField] private SoldierTracker soldierTracker;
 
-    [Header("Solider Spawn Settings")]
+  [Header("Solider Spawn Settings")]
     [SerializeField] private float spawnInterval = 5f;
     [SerializeField] private float spawnIntervalDecayPerSecond = 0.1f;
     [SerializeField] private float minimumSpawnInterval = 0.5f;
@@ -97,15 +99,20 @@ public class SpawnController : MonoBehaviour
         var targetController = spawnedObject.GetComponent<SoliderController>();
         targetController.Initialize(rescueDuration);
         targetController.Completed += OnTargetCompleted;
-    }
+
+    if (soldierTracker != null)
+      soldierTracker.RegisterSoldier(spawnedObject.transform);
+  }
 
 
     private void OnTargetCompleted(SoliderController target, SoliderController.RescueSoliderResult result)
-    {
-        Debug.Log($"[SpawnController] OnTargetCompleted {result} at {target.transform.position}", target);
-        target.Completed -= OnTargetCompleted;
+  {
+    target.Completed -= OnTargetCompleted;
 
-        Vector3Int targetCell = spawnArea.WorldToCell(target.transform.position);
+    if (soldierTracker != null)
+      soldierTracker.UnregisterSoldier(target.transform);
+
+    Vector3Int targetCell = spawnArea.WorldToCell(target.transform.position);
         occupiedCells.Remove(targetCell);
 
         activeTargetCount--;

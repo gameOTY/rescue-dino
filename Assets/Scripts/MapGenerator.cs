@@ -72,12 +72,10 @@ public class MapGenerator : MonoBehaviour
       }
       layoutStr += "\n";
     }
-    Debug.Log("Room layout:\n" + layoutStr);
   }
 
   public void GenerateMap()
   {
-    Debug.Log($"[MapGenerator] GenerateMap called. floorTilemap={(floorTilemap != null)}, floorTile={(floorTile != null)}");
     var floorTiles = new TileBase[mapWidth * mapHeight];
     var wallTiles = new TileBase[mapWidth * mapHeight];
 
