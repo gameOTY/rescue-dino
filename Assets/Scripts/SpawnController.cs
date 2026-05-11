@@ -104,7 +104,11 @@ public class SpawnController : MonoBehaviour
 
     if (spawnedObject.TryGetComponent<TargetIndicatorController>(out var indicator))
     {
-      indicator.Initialize(rescueDuration, rescueDuration);
+      if (indicator == null)
+      {
+        Debug.LogWarning($"[SpawnController] Spawned object '{spawnedObject.name}' does not have a TargetIndicatorController component.");
+      }
+      indicator.Initialize(rescueDuration, lifetime: 10f);
     }
 
     if (soldierTracker != null)
