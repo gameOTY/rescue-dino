@@ -49,8 +49,8 @@ public class PrefabPool : MonoBehaviour
         GameObject instance = Instantiate(prefab);
         instance.SetActive(false);
 
-        if (instance.TryGetComponent<SoliderController>(out SoliderController soldier))
-        {
+    if (instance.TryGetComponent<SoldierController>(out SoldierController soldier))
+    {
             soldier.SetPool(this);
         }
 

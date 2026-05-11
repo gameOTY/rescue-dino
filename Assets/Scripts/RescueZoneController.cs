@@ -1,174 +1,249 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(CircleCollider2D))]
 public class RescueZoneController : MonoBehaviour
 {
-    [Header("Configuration")]
-    [SerializeField] private float interactionScale = 1.2f;
+    [Header("Detection")]
+    [SerializeField] private float rescueRadiusMultiplier = 1.2f;
     [SerializeField] private string playerTag = "Player";
 
     [Header("Visual")]
-    [SerializeField] private SpriteRenderer zoneVisual;
-    [SerializeField] private Color zoneColor = new Color(0f, 1f, 1f, 0.35f);
-    [SerializeField] private bool showOnlyWhenPlayerInside = false;
+    [SerializeField] private SpriteRenderer zoneRenderer;
+    [SerializeField] private Color rescueZoneColor = new Color(0f, 1f, 1f, 0.35f);
+    [SerializeField] private bool showZoneOnlyWhenPlayerInside = false;
 
-    private CircleCollider2D triggerCollider;
-    private SoliderController parentSoldier;
+    private CircleCollider2D rescueTrigger;
+    private SoldierController soldier;
 
-    private Coroutine rescueCoroutine;
-    private int currentTransitionId;
-    private int playerOverlapCount;
-    private bool isRescuing;
+    private Coroutine rescueRoutine;
+    private int rescueSessionVersion;
+    private int playerColliderCountInside;
+    private bool isRescueCounting;
+    private float elapsedRescueSeconds;
+
+    public event Action<RescueZoneController> RescueCompleted;
+    public event Action PlayerEntered;
+    public event Action PlayerExited;
+
+    public bool IsPaused => elapsedRescueSeconds > 0f && !isRescueCounting;
+    public float ElapsedRescueTime => elapsedRescueSeconds;
+    public float RescueDuration => soldier != null ? soldier.RescueDuration : 3f;
+
+    public float GetRescueDuration()
+    {
+        return RescueDuration;
+    }
 
     private void Awake()
     {
-        triggerCollider = GetComponent<CircleCollider2D>();
-        parentSoldier = GetComponentInParent<SoliderController>();
+        CacheComponents();
 
-        if (parentSoldier == null)
+        if (soldier == null)
         {
-            Debug.LogError("[RescueZoneController] No SoliderController found in parent.", this);
+            Debug.LogError("[RescueZoneController] No SoldierController found in parent.", this);
             enabled = false;
             return;
         }
 
-        triggerCollider.isTrigger = true;
-
-        ConfigureColliderSize();
-        ConfigureVisual();
-        UpdateVisualState();
-    }
-
-    private void ConfigureColliderSize()
-    {
-        SpriteRenderer soldierSprite = parentSoldier.GetComponent<SpriteRenderer>();
-
-        if (soldierSprite != null && soldierSprite.sprite != null)
-        {
-            Vector2 spriteSize = soldierSprite.sprite.bounds.size;
-            float baseRadius = Mathf.Max(spriteSize.x, spriteSize.y) * 0.5f;
-
-            triggerCollider.radius = baseRadius * interactionScale;
-            triggerCollider.offset = Vector2.zero;
-        }
-        else
-        {
-            triggerCollider.radius = interactionScale;
-            triggerCollider.offset = Vector2.zero;
-        }
-    }
-
-    private void ConfigureVisual()
-    {
-        if (zoneVisual == null)
-            return;
-
-        zoneVisual.color = zoneColor;
-
-        float diameter = triggerCollider.radius * 2f;
-
-        // Giả sử sprite visual có size gốc là 1x1 Unity unit.
-        // Nếu sprite của bạn không phải 1x1, xem version bên dưới.
-        zoneVisual.transform.localPosition = triggerCollider.offset;
-        zoneVisual.transform.localScale = new Vector3(diameter, diameter, 1f);
-
-        SpriteRenderer soldierSprite = parentSoldier.GetComponent<SpriteRenderer>();
-        if (soldierSprite != null)
-        {
-            zoneVisual.sortingLayerID = soldierSprite.sortingLayerID;
-            zoneVisual.sortingOrder = soldierSprite.sortingOrder + 1;
-        }
-    }
-
-    private void UpdateVisualState()
-    {
-        if (zoneVisual == null)
-            return;
-
-        zoneVisual.enabled = !showOnlyWhenPlayerInside || playerOverlapCount > 0;
-    }
-
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        if (!other.CompareTag(playerTag))
-            return;
-
-        playerOverlapCount++;
-        UpdateVisualState();
-
-        if (isRescuing)
-            return;
-
-        StartRescue();
-    }
-
-    private void OnTriggerExit2D(Collider2D other)
-    {
-        if (!other.CompareTag(playerTag))
-            return;
-
-        playerOverlapCount = Mathf.Max(0, playerOverlapCount - 1);
-        UpdateVisualState();
-
-        if (playerOverlapCount == 0)
-        {
-            CancelRescue();
-        }
-    }
-
-    private void StartRescue()
-    {
-        isRescuing = true;
-        currentTransitionId++;
-        rescueCoroutine = StartCoroutine(RescueCountdown(currentTransitionId));
-    }
-
-    private IEnumerator RescueCountdown(int transitionId)
-    {
-        float elapsed = 0f;
-        float rescueDuration = parentSoldier.RescueDuration;
-
-        while (elapsed < rescueDuration)
-        {
-            if (transitionId != currentTransitionId)
-                yield break;
-
-            if (playerOverlapCount <= 0)
-                yield break;
-
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        if (transitionId != currentTransitionId)
-            yield break;
-
-        if (playerOverlapCount <= 0)
-            yield break;
-
-        parentSoldier.HandleAuthoritativeRescue();
-
-        isRescuing = false;
-        rescueCoroutine = null;
-    }
-
-    private void CancelRescue()
-    {
-        currentTransitionId++;
-
-        if (rescueCoroutine != null)
-        {
-            StopCoroutine(rescueCoroutine);
-            rescueCoroutine = null;
-        }
-
-        isRescuing = false;
+        SetupTrigger();
+        SetupZoneVisual();
+        RefreshZoneVisualVisibility();
     }
 
     private void OnDisable()
     {
-        CancelRescue();
-        playerOverlapCount = 0;
+        PauseRescue();
+
+        playerColliderCountInside = 0;
+        RefreshZoneVisualVisibility();
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (!IsPlayerCollider(other))
+            return;
+
+        playerColliderCountInside++;
+
+        RefreshZoneVisualVisibility();
+        PlayerEntered?.Invoke();
+
+        if (isRescueCounting)
+            return;
+
+        if (elapsedRescueSeconds > 0f)
+        {
+            ResumeRescue();
+        }
+        else
+        {
+            StartRescue();
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if (!IsPlayerCollider(other))
+            return;
+
+        playerColliderCountInside = Mathf.Max(0, playerColliderCountInside - 1);
+
+        RefreshZoneVisualVisibility();
+
+        if (playerColliderCountInside > 0)
+            return;
+
+        PauseRescue();
+        PlayerExited?.Invoke();
+    }
+
+    private void StartRescue()
+    {
+        isRescueCounting = true;
+        rescueSessionVersion++;
+
+        rescueRoutine = StartCoroutine(CountRescueProgress(rescueSessionVersion, 0f));
+    }
+
+    private void ResumeRescue()
+    {
+        isRescueCounting = true;
+        rescueSessionVersion++;
+
+        rescueRoutine = StartCoroutine(
+            CountRescueProgress(rescueSessionVersion, elapsedRescueSeconds)
+        );
+    }
+
+    private void PauseRescue()
+    {
+        rescueSessionVersion++;
+
+        if (rescueRoutine != null)
+        {
+            StopCoroutine(rescueRoutine);
+            rescueRoutine = null;
+        }
+
+        isRescueCounting = false;
+    }
+
+    private IEnumerator CountRescueProgress(int sessionVersion, float startElapsedSeconds)
+    {
+        float currentElapsedSeconds = startElapsedSeconds;
+
+        while (currentElapsedSeconds < RescueDuration)
+        {
+            if (!IsCurrentRescueSession(sessionVersion))
+                yield break;
+
+            if (!HasPlayerInside())
+                yield break;
+
+            currentElapsedSeconds += Time.deltaTime;
+            elapsedRescueSeconds = currentElapsedSeconds;
+
+            yield return null;
+        }
+
+        if (!IsCurrentRescueSession(sessionVersion))
+            yield break;
+
+        if (!HasPlayerInside())
+            yield break;
+
+        CompleteRescue();
+    }
+
+    private void CompleteRescue()
+    {
+        RescueCompleted?.Invoke(this);
+
+        soldier.HandleAuthoritativeRescue();
+
+        isRescueCounting = false;
+        rescueRoutine = null;
+        elapsedRescueSeconds = 0f;
+    }
+
+    private void CacheComponents()
+    {
+        rescueTrigger = GetComponent<CircleCollider2D>();
+        soldier = GetComponentInParent<SoldierController>();
+    }
+
+    private void SetupTrigger()
+    {
+        rescueTrigger.isTrigger = true;
+        rescueTrigger.offset = Vector2.zero;
+        rescueTrigger.radius = CalculateRescueRadius();
+    }
+
+    private float CalculateRescueRadius()
+    {
+        return 0.5f;
+    }
+
+    private void SetupZoneVisual()
+    {
+        if (zoneRenderer == null)
+            return;
+
+        zoneRenderer.color = rescueZoneColor;
+        zoneRenderer.transform.localPosition = rescueTrigger.offset;
+
+        MatchZoneVisualToTriggerSize();
+        MatchZoneVisualSortingToSoldier();
+    }
+
+    private void MatchZoneVisualToTriggerSize()
+    {
+        if (zoneRenderer.sprite == null)
+            return;
+
+        float targetDiameter = 1f * rescueRadiusMultiplier;
+        Vector2 spriteSize = zoneRenderer.sprite.bounds.size;
+
+        zoneRenderer.transform.localScale = new Vector3(
+            targetDiameter / spriteSize.x,
+            targetDiameter / spriteSize.y,
+            1f
+        );
+    }
+
+    private void MatchZoneVisualSortingToSoldier()
+    {
+        SpriteRenderer soldierRenderer = soldier.GetComponent<SpriteRenderer>();
+
+        if (soldierRenderer == null)
+            return;
+
+        zoneRenderer.sortingLayerID = soldierRenderer.sortingLayerID;
+        zoneRenderer.sortingOrder = soldierRenderer.sortingOrder + 1;
+    }
+
+    private void RefreshZoneVisualVisibility()
+    {
+        if (zoneRenderer == null)
+            return;
+
+        zoneRenderer.enabled = !showZoneOnlyWhenPlayerInside || HasPlayerInside();
+    }
+
+    private bool IsPlayerCollider(Collider2D other)
+    {
+        return other.CompareTag(playerTag);
+    }
+
+    private bool HasPlayerInside()
+    {
+        return playerColliderCountInside > 0;
+    }
+
+    private bool IsCurrentRescueSession(int sessionVersion)
+    {
+        return sessionVersion == rescueSessionVersion;
     }
 }

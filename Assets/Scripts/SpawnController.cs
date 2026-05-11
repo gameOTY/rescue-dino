@@ -96,16 +96,23 @@ public class SpawnController : MonoBehaviour
 
         GameObject spawnedObject = soliderPool.Get();
         spawnedObject.transform.position = spawnPosition;
-        var targetController = spawnedObject.GetComponent<SoliderController>();
-        targetController.Initialize(rescueDuration);
-        targetController.Completed += OnTargetCompleted;
+    var soliderController = spawnedObject.GetComponent<SoldierController>();
+    soliderController.Initialize(rescueDuration);
+    soliderController.Completed += OnTargetCompleted;
+
+
+
+    if (spawnedObject.TryGetComponent<TargetIndicatorController>(out var indicator))
+    {
+      indicator.Initialize(rescueDuration, rescueDuration);
+    }
 
     if (soldierTracker != null)
       soldierTracker.RegisterSoldier(spawnedObject.transform);
   }
 
 
-    private void OnTargetCompleted(SoliderController target, SoliderController.RescueSoliderResult result)
+  private void OnTargetCompleted(SoldierController target, SoldierController.RescueSoliderResult result)
   {
     target.Completed -= OnTargetCompleted;
 
@@ -119,12 +126,12 @@ public class SpawnController : MonoBehaviour
 
         switch (result)
         {
-            case SoliderController.RescueSoliderResult.Rescued:
-                gameManager.RegisterRescued();
+      case SoldierController.RescueSoliderResult.Rescued:
+        gameManager.RegisterRescued();
                 break;
 
-            case SoliderController.RescueSoliderResult.Dead:
-                gameManager.RegisterDead();
+      case SoldierController.RescueSoliderResult.Dead:
+        gameManager.RegisterDead();
                 break;
         }
     }

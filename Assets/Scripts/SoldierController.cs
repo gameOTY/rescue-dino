@@ -2,7 +2,8 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-public class SoliderController : MonoBehaviour
+[RequireComponent(typeof(Animator))]
+public class SoldierController : MonoBehaviour
 {
   public enum RescueSoliderResult { Rescued, Dead }
 
@@ -15,7 +16,7 @@ public class SoliderController : MonoBehaviour
   private PrefabPool objectPool;
   private Coroutine lifetimeCoroutine;
 
-  public event Action<SoliderController, RescueSoliderResult> Completed;
+  public event Action<SoldierController, RescueSoliderResult> Completed;
 
   /// <summary>
   /// Rescue duration is read by RescueZoneController child. Set during Initialize.
@@ -35,10 +36,6 @@ public class SoliderController : MonoBehaviour
     if (animator == null)
       animator = GetComponent<Animator>();
   }
-
-  /// <summary>
-  /// Called by RescueZoneController when player holds interaction long enough.
-  /// </summary>
   public void HandleAuthoritativeRescue()
   {
     StopCoroutineSafe(ref lifetimeCoroutine);

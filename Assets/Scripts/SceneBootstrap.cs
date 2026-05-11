@@ -17,19 +17,19 @@ public class SceneBootstrap : MonoBehaviour
 
     private void Initialize()
     {
-        Debug.Log("[SceneBootstrap] Starting init...");
-        Debug.Log($"[SceneBootstrap] mapGenerator={(mapGenerator != null ? "OK" : "NULL")}, spawnArea={(spawnArea != null ? "OK" : "NULL")}");
-        mapGenerator.GenerateMap();
-        Debug.Log("[SceneBootstrap] GenerateMap done");
-        cameraBoundsBuilder.RebuildFromTilemap();
-        Debug.Log("[SceneBootstrap] RebuildFromTilemap done");
-        spawnArea.BuildWalkableCells();
-        Debug.Log($"[SceneBootstrap] BuildWalkableCells done. IsReady={spawnArea.IsReady}, WalkableCells={spawnArea.WalkableCellCount}");
-        playerController.Initialize();
-        Debug.Log("[SceneBootstrap] Init complete");
-    }
+    // Debug.Log("[SceneBootstrap] Starting init...");
+    // Debug.Log($"[SceneBootstrap] mapGenerator={(mapGenerator != null ? "OK" : "NULL")}, spawnArea={(spawnArea != null ? "OK" : "NULL")}");
+    mapGenerator.GenerateMap();
+    // Debug.Log("[SceneBootstrap] GenerateMap done");
+    cameraBoundsBuilder.RebuildFromTilemap();
+    // Debug.Log("[SceneBootstrap] RebuildFromTilemap done");
+    spawnArea.BuildWalkableCells();
+    // Debug.Log($"[SceneBootstrap] BuildWalkableCells done. IsReady={spawnArea.IsReady}, WalkableCells={spawnArea.WalkableCellCount}");
+    playerController.Initialize();
+    // Debug.Log("[SceneBootstrap] Init complete");
+  }
 
-    public void RegenerateMap()
+  public void RegenerateMap()
     {
         mapGenerator.GenerateMap();
         spawnArea.BuildWalkableCells();
