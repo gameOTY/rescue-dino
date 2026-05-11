@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-[RequireComponent(typeof(SpriteRenderer))]
+[RequireComponent(typeof(SpriteRenderer), typeof(Collider2D))]
 public class DangerZoneController : MonoBehaviour
 {
   [SerializeField] private float lifetime = 3f;
@@ -12,6 +12,7 @@ public class DangerZoneController : MonoBehaviour
   private SpriteRenderer sr;
   private Coroutine lifetimeCoroutine;
   private Coroutine blinkCoroutine;
+  private bool hasDamaged;
 
   public event Action<DangerZoneController> PlayerDamaged;
 
@@ -20,15 +21,16 @@ public class DangerZoneController : MonoBehaviour
   public void Initialize(float lifetimeSeconds)
   {
     this.lifetime = lifetimeSeconds;
+    hasDamaged = false;
     lifetimeCoroutine = StartCoroutine(LifetimeRoutine());
     blinkCoroutine = StartCoroutine(BlinkRoutine());
   }
 
-  /// <summary>
-  /// Called by DangerZoneAreaController child when player enters the trigger zone.
-  /// </summary>
-  public void OnPlayerEnteredZone()
+  private void OnTriggerEnter2D(Collider2D other)
   {
+    if (!other.CompareTag("Player")) return;
+    if (hasDamaged) return;
+    hasDamaged = true;
     DamageAndRelease();
   }
 
