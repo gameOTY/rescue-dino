@@ -82,11 +82,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4cc7852de3bc34294849f1471c0b6659, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RescueZoneController
-  rescueRadiusMultiplier: 2.4
   playerTag: Player
   zoneRenderer: {fileID: 6689487647977461726}
-  rescueZoneColor: {r: 0, g: 1, b: 1, a: 0.35}
-  showZoneOnlyWhenPlayerInside: 0
+  gameConfig: {fileID: 11400000, guid: a8fe9a65347434f7d9e5951a3c2b6770, type: 2}
 --- !u!212 &6689487647977461726
 SpriteRenderer:
   serializedVersion: 2
@@ -284,7 +282,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bbdd6d861da324560a15850e8e8d1fac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SoliderController
-  lifetime: 10
   animator: {fileID: 2314133941639180664}
 --- !u!95 &2314133941639180664
 Animator:
@@ -334,7 +331,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TargetLifetimeIndicator
   _lifetimeImage: {fileID: 8782129474607412196}
-  _lifetime: 10
 --- !u!114 &2293437315359620545
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -362,7 +358,7 @@ GameObject:
   - component: {fileID: 1358850740288204332}
   - component: {fileID: 808713620168478376}
   - component: {fileID: 8782129474607412196}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: LifetimeBar
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -436,7 +432,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2814387538960743641}
   - component: {fileID: 2280546032705783711}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Indicators
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -499,7 +495,7 @@ GameObject:
   - component: {fileID: 3616734133749573486}
   - component: {fileID: 2560262824341685823}
   - component: {fileID: 7766670724176403679}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: ProgressRing
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -4,16 +4,15 @@ using UnityEngine.UI;
 public class TargetLifetimeIndicator : MonoBehaviour
 {
   [SerializeField] private Image _lifetimeImage;
-  [SerializeField] private float _lifetime = 10f;
 
+  private float _lifetime;
   private float _remainingTime;
-  private bool _isStopped;
   private float _flashTimer;
   private Color _originalColor;
   private Vector3 _originalScale;
 
   public bool IsExpired => _remainingTime <= 0f;
-  public bool IsStopped => _isStopped;
+  public bool IsStopped { get; private set; }
 
   private void Awake()
   {
@@ -26,8 +25,9 @@ public class TargetLifetimeIndicator : MonoBehaviour
 
   public void Initialize(float lifetime)
   {
+    _lifetime = lifetime;
     _remainingTime = lifetime;
-    _isStopped = false;
+    IsStopped = false;
     _flashTimer = 0f;
 
     if (_lifetimeImage != null)
@@ -46,7 +46,7 @@ public class TargetLifetimeIndicator : MonoBehaviour
 
   private void Update()
   {
-    if (_isStopped || _lifetimeImage == null)
+    if (IsStopped || _lifetimeImage == null)
     {
       return;
     }
@@ -79,6 +79,6 @@ public class TargetLifetimeIndicator : MonoBehaviour
 
   public void StopCountdown()
   {
-    _isStopped = true;
+    IsStopped = true;
   }
 }

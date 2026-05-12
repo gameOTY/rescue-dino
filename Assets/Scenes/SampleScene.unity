@@ -365,6 +365,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HUDController
   gameManager: {fileID: 1947231274}
+  hudConfig: {fileID: 11400000, guid: ff5df9daf2054c70a391f0b7f0178e01, type: 2}
   rescuedText: {fileID: 429524499}
   diedText: {fileID: 1416990474}
   timerText: {fileID: 0}
@@ -384,10 +385,6 @@ MonoBehaviour:
   edgeIndicatorImage: {fileID: 1803309280}
   soldierTracker: {fileID: 1596496488}
   hudCanvas: {fileID: 264822806}
-  edgePadding: 50
-  pulseSpeed: 2
-  pulseMinAlpha: 0.4
-  pulseMaxAlpha: 1
 --- !u!114 &264822804
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1031,9 +1028,7 @@ MonoBehaviour:
   dangerZonePool: {fileID: 799418348}
   gameManager: {fileID: 1947231274}
   player: {fileID: 2048017345}
-  dangerZoneSpawnInterval: 2
-  dangerZoneLifetime: 3
-  maxActiveDangerZones: 5
+  gameConfig: {fileID: 11400000, guid: a8fe9a65347434f7d9e5951a3c2b6770, type: 2}
 --- !u!4 &799418350
 Transform:
   m_ObjectHideFlags: 0
@@ -1932,10 +1927,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MapGenerator
   floorTilemap: {fileID: 1960307466}
   wallTilemap: {fileID: 811611609}
+  mapConfig: {fileID: 11400000, guid: 9c0ca04058014a7c9750fe4a1495c97f, type: 2}
   floorTile: {fileID: 11400000, guid: c85641d06cdc742a5901b62b80e807fa, type: 2}
   wallTile: {fileID: 11400000, guid: 513661d99ba784d89af727a2b1984d85, type: 2}
-  mapWidth: 20
-  mapHeight: 20
 --- !u!156049354 &1565536675
 Grid:
   m_ObjectHideFlags: 0
@@ -2014,11 +2008,7 @@ MonoBehaviour:
   soliderPool: {fileID: 1596496487}
   gameManager: {fileID: 1947231274}
   soldierTracker: {fileID: 1596496488}
-  spawnInterval: 5
-  spawnIntervalDecayPerSecond: 0.1
-  minimumSpawnInterval: 0.5
-  maxActiveSoldiers: 3
-  rescueDuration: 3
+  gameConfig: {fileID: 11400000, guid: a8fe9a65347434f7d9e5951a3c2b6770, type: 2}
 --- !u!4 &1596496486
 Transform:
   m_ObjectHideFlags: 0
@@ -2489,8 +2479,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 899dcba30c56f47379c20f6e0c953ebc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RescueDino.Runtime::GameManager
-  surviveDuration: 60
-  maxSoldierDeaths: 3
+  gameConfig: {fileID: 11400000, guid: a8fe9a65347434f7d9e5951a3c2b6770, type: 2}
 --- !u!4 &1947231275
 Transform:
   m_ObjectHideFlags: 0

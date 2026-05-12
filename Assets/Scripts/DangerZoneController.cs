@@ -5,9 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(SpriteRenderer), typeof(Collider2D))]
 public class DangerZoneController : MonoBehaviour
 {
-  [SerializeField] private float lifetime = 3f;
-  [SerializeField] private float blinkInterval = 0.2f;
-
+  private GameConfig gameConfig;
   private PrefabPool objectPool;
   private SpriteRenderer sr;
   private Coroutine lifetimeCoroutine;
@@ -18,10 +16,18 @@ public class DangerZoneController : MonoBehaviour
 
   public void SetPool(PrefabPool pool) => objectPool = pool;
 
-  public void Initialize(float lifetimeSeconds)
+  public void Initialize(GameConfig config)
   {
-    this.lifetime = lifetimeSeconds;
+    gameConfig = config;
     hasDamaged = false;
+
+    if (gameConfig == null)
+    {
+      Debug.LogError("[DangerZoneController] GameConfig was not provided.");
+      Release();
+      return;
+    }
+
     lifetimeCoroutine = StartCoroutine(LifetimeRoutine());
     blinkCoroutine = StartCoroutine(BlinkRoutine());
   }
@@ -36,7 +42,7 @@ public class DangerZoneController : MonoBehaviour
 
   private IEnumerator LifetimeRoutine()
   {
-    yield return new WaitForSeconds(lifetime);
+    yield return new WaitForSeconds(gameConfig.DangerZoneLifetime);
     Release();
   }
 
@@ -81,7 +87,7 @@ public class DangerZoneController : MonoBehaviour
       Color c = sr.color;
       c.a = c.a > 0.5f ? 0.15f : 1f;
       sr.color = c;
-      yield return new WaitForSeconds(blinkInterval);
+      yield return new WaitForSeconds(gameConfig.DangerZoneBlinkInterval);
     }
   }
 }

@@ -5,18 +5,18 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 public class SoldierController : MonoBehaviour
 {
-  public enum RescueSoliderResult { Rescued, Dead }
+  public enum RescueSoldierResult { Rescued, Dead }
 
-  [SerializeField] private float lifetime = 10f;
   [SerializeField] private Animator animator;
 
+  private GameConfig gameConfig;
   private bool isCompleted;
   private bool isInitialized;
   private int currentTransitionId;
   private PrefabPool objectPool;
   private Coroutine lifetimeCoroutine;
 
-  public event Action<SoldierController, RescueSoliderResult> Completed;
+  public event Action<SoldierController, RescueSoldierResult> Completed;
 
   /// <summary>
   /// Rescue duration is read by RescueZoneController child. Set during Initialize.
@@ -25,21 +25,33 @@ public class SoldierController : MonoBehaviour
 
   public void SetPool(PrefabPool pool) => objectPool = pool;
 
-  public void Initialize(float rescueDuration)
+  public void Initialize(GameConfig config)
   {
+    gameConfig = config;
+    isInitialized = false;
+    isCompleted = true;
+
+    if (gameConfig == null)
+    {
+      Debug.LogError("[SoldierController] GameConfig was not provided.");
+      Release();
+      return;
+    }
+
     isInitialized = true;
     isCompleted = false;
-    RescueDuration = rescueDuration;
+    RescueDuration = gameConfig.RescueTime;
     currentTransitionId++;
     lifetimeCoroutine = StartCoroutine(LifetimeCountdown());
 
     if (animator == null)
       animator = GetComponent<Animator>();
   }
+
   public void HandleAuthoritativeRescue()
   {
     StopCoroutineSafe(ref lifetimeCoroutine);
-    Complete(RescueSoliderResult.Rescued);
+    Complete(RescueSoldierResult.Rescued);
   }
 
   private void OnDisable()
@@ -47,18 +59,18 @@ public class SoldierController : MonoBehaviour
     if (!isInitialized) return;
     if (!isCompleted)
     {
-      Complete(RescueSoliderResult.Dead);
+      Complete(RescueSoldierResult.Dead);
     }
     currentTransitionId = 0;
   }
 
   private IEnumerator LifetimeCountdown()
   {
-    yield return new WaitForSeconds(lifetime);
-    Complete(RescueSoliderResult.Dead);
+    yield return new WaitForSeconds(gameConfig.SoldierLifetime);
+    Complete(RescueSoldierResult.Dead);
   }
 
-  private void Complete(RescueSoliderResult result)
+  private void Complete(RescueSoldierResult result)
   {
     if (isCompleted) return;
 
@@ -67,7 +79,7 @@ public class SoldierController : MonoBehaviour
     StopCoroutineSafe(ref lifetimeCoroutine);
 
     if (animator != null)
-      animator.SetTrigger(result == RescueSoliderResult.Rescued ? "Rescued" : "Dead");
+      animator.SetTrigger(result == RescueSoldierResult.Rescued ? "Rescued" : "Dead");
 
     Completed?.Invoke(this, result);
     Release();

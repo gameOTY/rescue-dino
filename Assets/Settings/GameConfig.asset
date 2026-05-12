@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f99add611ed6f4d57ab342a930ad3809, type: 3}
+  m_Name: GameConfig
+  m_EditorClassIdentifier: Assembly-CSharp::GameConfig
+  _surviveDuration: 60
+  _deathLimit: 3
+  _moveSpeed: 10
+  _stopDistance: 0.1
+  _skinWidth: 0.02
+  _damageFlashColor: {r: 1, g: 0.25, b: 0.25, a: 1}
+  _damageFlashDuration: 0.12
+  _damageShakeDuration: 0.18
+  _damageShakeDistance: 0.06
+  _soldierSpawnInterval: 5
+  _soliderSpawnDecayRate: 0.1
+  _minSpawnInterval: 0.5
+  _maxActiveSoldiers: 3
+  _rescueTime: 3
+  _soldierLifetime: 10
+  _dangerZoneSpawnInterval: 2
+  _dangerZoneLifetime: 3
+  _maxActiveDangerZones: 5
+  _dangerZoneBlinkInterval: 0.2
+  _rescueZoneDiameter: 2.4
+  _rescueZoneColor: {r: 0, g: 1, b: 1, a: 0.35}
+  _showZoneOnlyWhenPlayerInside: 0

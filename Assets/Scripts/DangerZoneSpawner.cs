@@ -10,9 +10,7 @@ public class DangerZoneSpawner : MonoBehaviour
   [SerializeField] private GameObject player;
 
   [Header("Danger Zone Rules")]
-  [SerializeField] private float dangerZoneSpawnInterval = 2f;
-  [SerializeField] private float dangerZoneLifetime = 3f;
-  [SerializeField] private int maxActiveDangerZones = 5;
+  [SerializeField] private GameConfig gameConfig;
 
   private Coroutine spawnCoroutine;
 
@@ -32,9 +30,15 @@ public class DangerZoneSpawner : MonoBehaviour
 
   private IEnumerator SpawnLoop()
   {
+    if (gameConfig == null)
+    {
+      Debug.LogError("[DangerZoneSpawner] GameConfig was not assigned in the Inspector.");
+      yield break;
+    }
+
     while (!gameManager.IsTerminal)
     {
-      yield return new WaitForSeconds(dangerZoneSpawnInterval);
+      yield return new WaitForSeconds(gameConfig.DangerZoneSpawnInterval);
 
       if (!spawnArea.IsReady)
       {
@@ -42,7 +46,7 @@ public class DangerZoneSpawner : MonoBehaviour
         continue;
       }
 
-      if (dangerZonePool.CountActive >= maxActiveDangerZones)
+      if (dangerZonePool.CountActive >= gameConfig.MaxActiveDangerZones)
         continue;
 
       SpawnZone();
@@ -57,7 +61,7 @@ public class DangerZoneSpawner : MonoBehaviour
     var zone = dangerZonePool.Get();
     zone.transform.position = position;
     var dangerZoneController = zone.GetComponent<DangerZoneController>();
-    dangerZoneController.Initialize(dangerZoneLifetime);
+    dangerZoneController.Initialize(gameConfig);
     dangerZoneController.PlayerDamaged += OnDangerZonePlayerDamaged;
   }
 

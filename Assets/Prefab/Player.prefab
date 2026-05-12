@@ -170,15 +170,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b6730518e7c24dab82ef5ee3fe2ca7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RescueDino.Runtime::PlayerController
-  moveSpeed: 10
-  arrivalThreshold: 0.1
   mainCamera: {fileID: 0}
   gameManager: {fileID: 0}
   spawnArea: {fileID: 0}
+  gameConfig: {fileID: 11400000, guid: a8fe9a65347434f7d9e5951a3c2b6770, type: 2}
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 64
-  skinWidth: 0.02
 --- !u!95 &5432823881448230573
 Animator:
   serializedVersion: 7

@@ -5,102 +5,100 @@ using UnityEngine;
 [RequireComponent(typeof(SoldierTracker))]
 public class SpawnController : MonoBehaviour
 {
-    [Header("References")]
-    [SerializeField] private TilemapSpawnArea spawnArea;
-    [SerializeField] private PrefabPool soliderPool;
-    [SerializeField] private GameManager gameManager;
+  [Header("References")]
+  [SerializeField] private TilemapSpawnArea spawnArea;
+  [SerializeField] private PrefabPool soldierPool;
+  [SerializeField] private GameManager gameManager;
   [SerializeField] private SoldierTracker soldierTracker;
+  [SerializeField] private GameConfig gameConfig;
 
-  [Header("Solider Spawn Settings")]
-    [SerializeField] private float spawnInterval = 5f;
-    [SerializeField] private float spawnIntervalDecayPerSecond = 0.1f;
-    [SerializeField] private float minimumSpawnInterval = 0.5f;
+  public GameConfig Config => gameConfig;
 
-    [SerializeField] private int maxActiveSoldiers = 3;
+  private int activeTargetCount;
+  private readonly HashSet<Vector3Int> occupiedCells = new();
 
-    [SerializeField] private float rescueDuration = 3f;
+  private Coroutine spawnCoroutine;
 
-    private int activeTargetCount;
-    private readonly HashSet<Vector3Int> occupiedCells = new();
+  private void OnEnable()
+  {
+    spawnCoroutine = StartCoroutine(SpawnLoop());
+  }
 
-    private Coroutine spawnCoroutine;
-
-    private void OnEnable()
+  private void OnDisable()
+  {
+    if (spawnCoroutine != null)
     {
-        spawnCoroutine = StartCoroutine(SpawnLoop());
+      StopCoroutine(spawnCoroutine);
+      spawnCoroutine = null;
+    }
+  }
+
+  private float GetCurrentSpawnInterval()
+  {
+    float elapsedTime = Time.timeSinceLevelLoad;
+    return Mathf.Max(
+      Config.MinSpawnInterval,
+      Config.SoldierSpawnInterval - Config.SoliderSpawnDecayRate * elapsedTime
+    );
+  }
+
+  private IEnumerator SpawnLoop()
+  {
+    if (Config == null)
+    {
+      Debug.LogError("[SpawnController] GameConfig was not assigned in the Inspector.");
+      yield break;
     }
 
-    private void OnDisable()
+    if (soldierPool == null)
     {
-        if (spawnCoroutine != null)
-        {
-            StopCoroutine(spawnCoroutine);
-            spawnCoroutine = null;
-        }
+      Debug.LogError("[SpawnController] SoldierPool was not assigned in the Inspector.");
+      yield break;
     }
 
-    private float GetCurrentSpawnInterval()
+    while (!gameManager.IsTerminal)
     {
-        float elapsedTime = Time.timeSinceLevelLoad;
-        return Mathf.Max(minimumSpawnInterval, spawnInterval - spawnIntervalDecayPerSecond * elapsedTime);
+      yield return new WaitForSeconds(GetCurrentSpawnInterval());
+
+      if (!spawnArea.IsReady)
+      {
+        yield return null;
+        continue;
+      }
+
+      if (activeTargetCount >= Config.MaxActiveSoldiers) continue;
+
+      SpawnSoldier();
+    }
+  }
+
+  private void SpawnSoldier()
+  {
+    if (activeTargetCount >= Config.MaxActiveSoldiers)
+    {
+      return;
     }
 
-    private IEnumerator SpawnLoop()
+    bool hasPosition = spawnArea.GetRandomWalkablePosition(
+      out Vector3 spawnPosition,
+      occupiedCells
+    );
+
+    if (!hasPosition)
     {
-        if (soliderPool == null)
-        {
-            Debug.LogError("[SpawnController] SoliderPool was not assigned in the Inspector.");
-            yield break;
-        }
-
-        while (!gameManager.IsTerminal)
-        {
-            yield return new WaitForSeconds(GetCurrentSpawnInterval());
-
-            if (!spawnArea.IsReady)
-            {
-                yield return null;
-                continue;
-            }
-
-            if (activeTargetCount >= maxActiveSoldiers)
-            {
-                continue;
-            }
-
-            SpawnSoldier();
-        }
+      Debug.LogWarning("Cannot spawn target. No valid spawn position.");
+      return;
     }
 
-    private void SpawnSoldier()
-    {
-        if (activeTargetCount >= maxActiveSoldiers)
-        {
-            return;
-        }
+    activeTargetCount++;
+    Vector3Int spawnCell = spawnArea.WorldToCell(spawnPosition);
+    occupiedCells.Add(spawnCell);
 
-        bool hasPosition = spawnArea.GetRandomWalkablePosition(
-                out Vector3 spawnPosition,
-                occupiedCells
-            );
-
-        if (!hasPosition)
-        {
-            Debug.LogWarning("Cannot spawn target. No valid spawn position.");
-            return;
-        }
-
-        activeTargetCount++;
-        Vector3Int spawnCell = spawnArea.WorldToCell(spawnPosition);
-        occupiedCells.Add(spawnCell);
-
-        GameObject spawnedObject = soliderPool.Get();
-        spawnedObject.transform.position = spawnPosition;
-    var soliderController = spawnedObject.GetComponent<SoldierController>();
-    soliderController.Initialize(rescueDuration);
-    soliderController.Completed += OnTargetCompleted;
-
-
+    GameObject spawnedObject = soldierPool.Get();
+    spawnedObject.transform.position = spawnPosition;
+    var soldierController = spawnedObject.GetComponent<SoldierController>();
+    soldierController.Initialize(Config);
+    soldierController.Completed += OnTargetCompleted;
 
     if (spawnedObject.TryGetComponent<TargetIndicatorController>(out var indicator))
     {
@@ -108,15 +106,14 @@ public class SpawnController : MonoBehaviour
       {
         Debug.LogWarning($"[SpawnController] Spawned object '{spawnedObject.name}' does not have a TargetIndicatorController component.");
       }
-      indicator.Initialize(rescueDuration, lifetime: 10f);
+      indicator.Initialize(Config.RescueTime, Config.SoldierLifetime);
     }
 
     if (soldierTracker != null)
       soldierTracker.RegisterSoldier(spawnedObject.transform);
   }
 
-
-  private void OnTargetCompleted(SoldierController target, SoldierController.RescueSoliderResult result)
+  private void OnTargetCompleted(SoldierController target, SoldierController.RescueSoldierResult result)
   {
     target.Completed -= OnTargetCompleted;
 
@@ -124,19 +121,19 @@ public class SpawnController : MonoBehaviour
       soldierTracker.UnregisterSoldier(target.transform);
 
     Vector3Int targetCell = spawnArea.WorldToCell(target.transform.position);
-        occupiedCells.Remove(targetCell);
+    occupiedCells.Remove(targetCell);
 
-        activeTargetCount--;
+    activeTargetCount--;
 
-        switch (result)
-        {
-      case SoldierController.RescueSoliderResult.Rescued:
+    switch (result)
+    {
+      case SoldierController.RescueSoldierResult.Rescued:
         gameManager.RegisterRescued();
-                break;
+        break;
 
-      case SoldierController.RescueSoliderResult.Dead:
+      case SoldierController.RescueSoldierResult.Dead:
         gameManager.RegisterDead();
-                break;
-        }
+        break;
     }
+  }
 }

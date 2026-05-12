@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class HUDController : MonoBehaviour
 {
   [SerializeField] private GameManager gameManager;
+  [SerializeField] private HUDConfig hudConfig;
   [SerializeField] private TMP_Text rescuedText;
   [SerializeField] private TMP_Text diedText;
   [SerializeField] private TMP_Text timerText;
@@ -34,16 +35,21 @@ public class HUDController : MonoBehaviour
   [SerializeField] private Image edgeIndicatorImage;
   [SerializeField] private SoldierTracker soldierTracker;
   [SerializeField] private Canvas hudCanvas;
-  [SerializeField] private float edgePadding = 50f;
-  [SerializeField] private float pulseSpeed = 2f;
-  [SerializeField] private float pulseMinAlpha = 0.4f;
-  [SerializeField] private float pulseMaxAlpha = 1f;
 
   private Camera _mainCamera;
   private float _pulsePhase;
 
+  public HUDConfig Config => hudConfig;
+
   private void Start()
   {
+    if (Config == null)
+    {
+      Debug.LogError("[HUDController] HUDConfig was not assigned in the Inspector.");
+      enabled = false;
+      return;
+    }
+
     _mainCamera = Camera.main;
     if (edgeIndicatorImage != null)
       edgeIndicatorImage.enabled = false;
@@ -85,10 +91,10 @@ public class HUDController : MonoBehaviour
 
     Vector3 soldierScreenPos = _mainCamera.WorldToScreenPoint(soldierWorldPos);
 
-    bool isOnScreen = soldierScreenPos.x >= edgePadding &&
-                      soldierScreenPos.x <= Screen.width - edgePadding &&
-                      soldierScreenPos.y >= edgePadding &&
-                      soldierScreenPos.y <= Screen.height - edgePadding &&
+    bool isOnScreen = soldierScreenPos.x >= Config.EdgePadding &&
+                      soldierScreenPos.x <= Screen.width - Config.EdgePadding &&
+                      soldierScreenPos.y >= Config.EdgePadding &&
+                      soldierScreenPos.y <= Screen.height - Config.EdgePadding &&
                       soldierScreenPos.z > 0;
 
     if (isOnScreen)
@@ -98,8 +104,8 @@ public class HUDController : MonoBehaviour
     }
 
     // Clamp to screen edge in native pixel coords
-    float clampedX = Mathf.Clamp(soldierScreenPos.x, edgePadding, Screen.width  - edgePadding);
-    float clampedY = Mathf.Clamp(soldierScreenPos.y, edgePadding, Screen.height - edgePadding);
+    float clampedX = Mathf.Clamp(soldierScreenPos.x, Config.EdgePadding, Screen.width - Config.EdgePadding);
+    float clampedY = Mathf.Clamp(soldierScreenPos.y, Config.EdgePadding, Screen.height - Config.EdgePadding);
 
     Camera uiCamera = hudCanvas.renderMode == RenderMode.ScreenSpaceOverlay
         ? null
@@ -129,9 +135,9 @@ public class HUDController : MonoBehaviour
     indicatorRect.rotation = Quaternion.Euler(0, 0, angle);
 
     // Pulse alpha
-    _pulsePhase += Time.deltaTime * pulseSpeed;
+    _pulsePhase += Time.deltaTime * Config.PulseSpeed;
     float t = (Mathf.Sin(_pulsePhase) + 1f) * 0.5f;
-    float alpha = Mathf.Lerp(pulseMinAlpha, pulseMaxAlpha, t);
+    float alpha = Mathf.Lerp(Config.PulseMinAlpha, Config.PulseMaxAlpha, t);
     SetIndicatorAlpha(alpha);
 
     edgeIndicatorImage.enabled = true;

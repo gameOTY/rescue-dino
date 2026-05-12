@@ -105,8 +105,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c2c7b640dda94d9a93f2e797e7decc1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RescueDino.Runtime::DangerZoneController
-  lifetime: 3
-  blinkInterval: 0.2
 --- !u!61 &2279013580943841301
 BoxCollider2D:
   m_ObjectHideFlags: 0

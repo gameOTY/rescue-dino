@@ -7,7 +7,7 @@ public class TargetIndicatorController : MonoBehaviour
     [SerializeField] private RescueProgressIndicator rescueProgressIndicator;
     [SerializeField] private TargetLifetimeIndicator targetLifetimeIndicator;
     [SerializeField] private RescueZoneController rescueZoneController;
-    [SerializeField] private SoldierController soliderController;
+    [SerializeField] private SoldierController soldierController;
 
     private bool _isRescued = false;
     private bool _isVisible = false;
@@ -36,8 +36,8 @@ public class TargetIndicatorController : MonoBehaviour
             rescueZoneController.PlayerExited += OnPlayerExited;
         }
 
-        if (soliderController != null)
-            soliderController.Completed += OnSoliderCompleted;
+        if (soldierController != null)
+            soldierController.Completed += OnSoldierCompleted;
     }
 
     private void OnPlayerEntered()
@@ -65,10 +65,10 @@ public class TargetIndicatorController : MonoBehaviour
         Rescued?.Invoke();
     }
 
-    private void OnSoliderCompleted(SoldierController soldier, SoldierController.RescueSoliderResult result)
+  private void OnSoldierCompleted(SoldierController soldier, SoldierController.RescueSoldierResult result)
+  {
+    if (result == SoldierController.RescueSoldierResult.Dead && !_isRescued)
     {
-        if (result == SoldierController.RescueSoliderResult.Dead && !_isRescued)
-        {
             HandleDeathSequence();
         }
     }
@@ -109,7 +109,7 @@ public class TargetIndicatorController : MonoBehaviour
             rescueZoneController.PlayerExited -= OnPlayerExited;
         }
 
-        if (soliderController != null)
-            soliderController.Completed -= OnSoliderCompleted;
+        if (soldierController != null)
+            soldierController.Completed -= OnSoldierCompleted;
     }
 }

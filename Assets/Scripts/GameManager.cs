@@ -4,8 +4,9 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
   [Header("Game Rules")]
-  [SerializeField] private float surviveDuration = 60f;
-  [SerializeField] private int maxSoldierDeaths = 3;
+  [SerializeField] private GameConfig gameConfig;
+
+  public GameConfig Config => gameConfig;
 
   public float PlayerHealth { get; private set; }
   public int SoldiersRescued { get; private set; }
@@ -15,16 +16,20 @@ public class GameManager : MonoBehaviour
   public bool IsWon { get; private set; }
   public bool IsTerminal => IsGameOver || IsWon;
 
-  public float MaxHealth => maxSoldierDeaths;
-  public float TotalTime => surviveDuration;
-  public float NormalizedHealth => PlayerHealth / maxSoldierDeaths;
-  public float NormalizedTime => TimeRemaining / surviveDuration;
+  public float MaxHealth => Config.DeathLimit;
+  public float TotalTime => Config.SurviveDuration;
+  public float NormalizedHealth => MaxHealth > 0 ? PlayerHealth / MaxHealth : 0f;
+  public float NormalizedTime => TotalTime > 0 ? TimeRemaining / TotalTime : 0f;
 
 
   // ─── Lifecycle ─────────────────────────────────────────
 
   private void Awake()
   {
+    if (Config == null)
+    {
+      throw new Exception("GameConfig reference is missing in GameManager.");
+    }
     ResetRuntimeState();
   }
 
@@ -42,10 +47,10 @@ public class GameManager : MonoBehaviour
 
   public void ResetRuntimeState()
   {
-    PlayerHealth = maxSoldierDeaths;
+    PlayerHealth = Config.DeathLimit;
     SoldiersRescued = 0;
     SoldiersDied = 0;
-    TimeRemaining = surviveDuration;
+    TimeRemaining = Config.SurviveDuration;
     IsGameOver = false;
     IsWon = false;
   }
@@ -53,6 +58,7 @@ public class GameManager : MonoBehaviour
   // ─── Events ─────────────────────────────────────────────
 
   public event Action GameOver;
+  public event Action<int, string> PlayerDamaged;
 
   public void RegisterRescued()
   {
@@ -74,6 +80,8 @@ public class GameManager : MonoBehaviour
     if (IsTerminal) return;
 
     PlayerHealth -= amount;
+    PlayerDamaged?.Invoke(amount, reason);
+
     if (PlayerHealth <= 0)
     {
       PlayerHealth = 0;
