@@ -283,6 +283,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SoliderController
   animator: {fileID: 2314133941639180664}
+  animationDuration: 2
 --- !u!95 &2314133941639180664
 Animator:
   serializedVersion: 7
@@ -346,7 +347,7 @@ MonoBehaviour:
   rescueProgressIndicator: {fileID: 1576020787210517968}
   targetLifetimeIndicator: {fileID: 2268489092173160116}
   rescueZoneController: {fileID: 1696058732984923531}
-  soliderController: {fileID: 5686322323338875002}
+  soldierController: {fileID: 5686322323338875002}
 --- !u!1 &6729892634228192156
 GameObject:
   m_ObjectHideFlags: 0

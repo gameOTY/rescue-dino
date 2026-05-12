@@ -81,4 +81,12 @@ public class TargetLifetimeIndicator : MonoBehaviour
   {
     IsStopped = true;
   }
+
+  public void Hide()
+  {
+    StopCountdown();
+
+    if (_lifetimeImage != null)
+      _lifetimeImage.gameObject.SetActive(false);
+  }
 }

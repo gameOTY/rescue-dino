@@ -39,7 +39,10 @@ namespace RescueGame
       _currentProgress = 0f;
       _isRunning = false;
       if (_progressRingImage != null)
+      {
+        _progressRingImage.gameObject.SetActive(true);
         _progressRingImage.fillAmount = 0f;
+      }
     }
 
     public void StartProgress(float rescueDuration)
@@ -51,6 +54,7 @@ namespace RescueGame
 
       if (_progressRingImage != null)
       {
+        _progressRingImage.gameObject.SetActive(true);
         _progressRingImage.fillAmount = 0f;
       }
 
@@ -63,6 +67,14 @@ namespace RescueGame
       StopCoroutineRef();
     }
 
+    public void Hide()
+    {
+      StopProgress();
+
+      if (_progressRingImage != null)
+        _progressRingImage.gameObject.SetActive(false);
+    }
+
     public void ResumeProgress(float startElapsedTime, float rescueDuration)
     {
       _elapsedTime = startElapsedTime;
@@ -72,6 +84,7 @@ namespace RescueGame
 
       if (_progressRingImage != null)
       {
+        _progressRingImage.gameObject.SetActive(true);
         _progressRingImage.fillAmount = _currentProgress;
       }
 

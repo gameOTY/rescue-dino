@@ -75,11 +75,8 @@ public class TargetIndicatorController : MonoBehaviour
 
     private void HandleDeathSequence()
     {
-        if (rescueProgressIndicator != null)
-            rescueProgressIndicator.gameObject.SetActive(false);
-
-        if (targetLifetimeIndicator != null)
-            targetLifetimeIndicator.gameObject.SetActive(false);
+        rescueProgressIndicator?.Hide();
+        targetLifetimeIndicator?.Hide();
     }
 
     private void OnBecameVisible()

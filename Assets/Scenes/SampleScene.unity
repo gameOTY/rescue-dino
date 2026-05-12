@@ -2005,7 +2005,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpawnController
   spawnArea: {fileID: 1565536677}
-  soliderPool: {fileID: 1596496487}
+  soldierPool: {fileID: 1596496487}
   gameManager: {fileID: 1947231274}
   soldierTracker: {fileID: 1596496488}
   gameConfig: {fileID: 11400000, guid: a8fe9a65347434f7d9e5951a3c2b6770, type: 2}
@@ -2875,6 +2875,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b6730518e7c24dab82ef5ee3fe2ca7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RescueDino.Runtime::PlayerController
+--- !u!95 &2048017350 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5432823881448230573, guid: 6b5a748b2a1104ad596c3b8c1b8ef934, type: 3}
+  m_PrefabInstance: {fileID: 3559859792973952966}
+  m_PrefabAsset: {fileID: 0}
+--- !u!212 &2048017353 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 5112973216016848353, guid: 6b5a748b2a1104ad596c3b8c1b8ef934, type: 3}
+  m_PrefabInstance: {fileID: 3559859792973952966}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2077423080
 GameObject:
   m_ObjectHideFlags: 0
@@ -3046,6 +3056,14 @@ PrefabInstance:
       propertyPath: gameManager
       value: 
       objectReference: {fileID: 1947231274}
+    - target: {fileID: 1936000486085661636, guid: 6b5a748b2a1104ad596c3b8c1b8ef934, type: 3}
+      propertyPath: playerAnimator
+      value: 
+      objectReference: {fileID: 2048017350}
+    - target: {fileID: 1936000486085661636, guid: 6b5a748b2a1104ad596c3b8c1b8ef934, type: 3}
+      propertyPath: spriteRenderer
+      value: 
+      objectReference: {fileID: 2048017353}
     - target: {fileID: 5112973216016848353, guid: 6b5a748b2a1104ad596c3b8c1b8ef934, type: 3}
       propertyPath: m_Sprite
       value: 

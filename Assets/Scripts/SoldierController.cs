@@ -7,15 +7,19 @@ public class SoldierController : MonoBehaviour
 {
   public enum RescueSoldierResult { Rescued, Dead }
 
+  private static readonly int IdleStateHash = Animator.StringToHash("Warrior_Idle_Blue");
+  private static readonly int DeadTriggerHash = Animator.StringToHash("Dead");
+
   [SerializeField] private Animator animator;
   [SerializeField] private float animationDuration = 0.5f;
 
   private GameConfig gameConfig;
   private bool isCompleted;
-  private bool isInitialized;
   private int currentTransitionId;
   private PrefabPool objectPool;
   private Coroutine lifetimeCoroutine;
+  private Coroutine releaseCoroutine;
+  private Collider2D[] colliders;
 
   public event Action<SoldierController, RescueSoldierResult> Completed;
 
@@ -29,7 +33,6 @@ public class SoldierController : MonoBehaviour
   public void Initialize(GameConfig config)
   {
     gameConfig = config;
-    isInitialized = false;
     isCompleted = true;
 
     if (gameConfig == null)
@@ -39,14 +42,17 @@ public class SoldierController : MonoBehaviour
       return;
     }
 
-    isInitialized = true;
     isCompleted = false;
     RescueDuration = gameConfig.RescueTime;
     currentTransitionId++;
-    lifetimeCoroutine = StartCoroutine(LifetimeCountdown());
+    StopCoroutineSafe(ref releaseCoroutine);
+    SetCollidersEnabled(true);
 
     if (animator == null)
       animator = GetComponent<Animator>();
+
+    PlayAnimationState(IdleStateHash);
+    lifetimeCoroutine = StartCoroutine(LifetimeCountdown());
   }
 
   public void HandleAuthoritativeRescue()
@@ -57,11 +63,8 @@ public class SoldierController : MonoBehaviour
 
   private void OnDisable()
   {
-    if (!isInitialized) return;
-    if (!isCompleted)
-    {
-      Complete(RescueSoldierResult.Dead);
-    }
+    StopCoroutineSafe(ref lifetimeCoroutine);
+    StopCoroutineSafe(ref releaseCoroutine);
     currentTransitionId = 0;
   }
 
@@ -77,19 +80,32 @@ public class SoldierController : MonoBehaviour
 
     isCompleted = true;
     StopCoroutineSafe(ref lifetimeCoroutine);
+    SetCollidersEnabled(false);
 
-    if (animator != null)
-      animator.SetTrigger(result == RescueSoldierResult.Rescued ? "Rescued" : "Dead");
+    if (result == RescueSoldierResult.Rescued)
+      Debug.Log("[SoldierController] Soldier rescued!");
+    else
+      animator.SetTrigger(DeadTriggerHash);
 
     Completed?.Invoke(this, result);
 
-    // Delay release to allow animation to play before returning to pool
-    StartCoroutine(DelayedRelease(animationDuration));
+    if (!isActiveAndEnabled)
+    {
+      releaseCoroutine = null;
+      return;
+    }
+
+    releaseCoroutine = StartCoroutine(DelayedRelease(animationDuration, currentTransitionId));
   }
 
-  private IEnumerator DelayedRelease(float delay)
+  private IEnumerator DelayedRelease(float delay, int transitionId)
   {
     yield return new WaitForSeconds(delay);
+
+    if (transitionId != currentTransitionId)
+      yield break;
+
+    releaseCoroutine = null;
     Release();
   }
 
@@ -106,5 +122,22 @@ public class SoldierController : MonoBehaviour
     if (coroutine == null) return;
     StopCoroutine(coroutine);
     coroutine = null;
+  }
+
+  private void SetCollidersEnabled(bool isEnabled)
+  {
+    colliders ??= GetComponentsInChildren<Collider2D>();
+
+    foreach (Collider2D collider in colliders)
+      collider.enabled = isEnabled;
+  }
+
+  private void PlayAnimationState(int stateHash)
+  {
+    if (animator == null)
+      return;
+
+    animator.Play(stateHash, 0, 0f);
+    animator.Update(0f);
   }
 }
