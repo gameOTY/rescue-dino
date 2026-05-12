@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 8458961420822702022}
   - component: {fileID: 6950457370835408696}
   - component: {fileID: 2279013580943841301}
+  - component: {fileID: 5127811930413311589}
   m_Layer: 0
   m_Name: DangerZone
   m_TagString: Untagged
@@ -151,3 +152,25 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1.2001591, y: 1.0910778}
   m_EdgeRadius: 0
+--- !u!95 &5127811930413311589
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 336498945076863696}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 6c1ac94f9e46947c6aebf6503f3115c1, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

@@ -95,7 +95,9 @@ public class SoldierController : MonoBehaviour
       return;
     }
 
-    releaseCoroutine = StartCoroutine(DelayedRelease(animationDuration, currentTransitionId));
+    if (result == RescueSoldierResult.Rescued) Release(); // Immediate release for rescued soldiers
+    else
+      releaseCoroutine = StartCoroutine(DelayedRelease(animationDuration, currentTransitionId));
   }
 
   private IEnumerator DelayedRelease(float delay, int transitionId)

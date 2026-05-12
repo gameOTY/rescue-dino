@@ -10,6 +10,7 @@ public class RescueZoneController : MonoBehaviour
 
   [Header("Visual")]
   [SerializeField] private SpriteRenderer zoneRenderer;
+  [SerializeField] private GameObject healingAura;
 
   [Header("Config")]
   [SerializeField] private GameConfig gameConfig;
@@ -57,6 +58,7 @@ public class RescueZoneController : MonoBehaviour
 
     SetupTrigger();
     SetupZoneVisual();
+    SetHealingAuraActive(false);
     RefreshZoneVisualVisibility();
   }
 
@@ -111,6 +113,7 @@ public class RescueZoneController : MonoBehaviour
   {
     isRescueCounting = true;
     rescueSessionVersion++;
+    SetHealingAuraActive(true);
 
     rescueRoutine = StartCoroutine(CountRescueProgress(rescueSessionVersion, 0f));
   }
@@ -119,6 +122,7 @@ public class RescueZoneController : MonoBehaviour
   {
     isRescueCounting = true;
     rescueSessionVersion++;
+    SetHealingAuraActive(true);
 
     rescueRoutine = StartCoroutine(
       CountRescueProgress(rescueSessionVersion, ElapsedRescueTime)
@@ -136,6 +140,7 @@ public class RescueZoneController : MonoBehaviour
     }
 
     isRescueCounting = false;
+    SetHealingAuraActive(false);
   }
 
   private IEnumerator CountRescueProgress(int sessionVersion, float startElapsedSeconds)
@@ -167,6 +172,7 @@ public class RescueZoneController : MonoBehaviour
 
   private void CompleteRescue()
   {
+    SetHealingAuraActive(false);
     RescueCompleted?.Invoke(this);
 
     soldier.HandleAuthoritativeRescue();
@@ -238,6 +244,14 @@ public class RescueZoneController : MonoBehaviour
       return;
 
     zoneRenderer.enabled = !Config.ShowZoneOnlyWhenPlayerInside || HasPlayerInside();
+  }
+
+  private void SetHealingAuraActive(bool isActive)
+  {
+    if (healingAura == null)
+      return;
+
+    healingAura.SetActive(isActive);
   }
 
   private bool IsPlayerCollider(Collider2D other)
