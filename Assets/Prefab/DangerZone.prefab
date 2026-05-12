@@ -106,6 +106,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c2c7b640dda94d9a93f2e797e7decc1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RescueDino.Runtime::DangerZoneController
+  hitAnimationDuration: 1.5
 --- !u!61 &2279013580943841301
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -165,7 +166,7 @@ Animator:
   m_Controller: {fileID: 9100000, guid: 6c1ac94f9e46947c6aebf6503f3115c1, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
-  m_ApplyRootMotion: 0
+  m_ApplyRootMotion: 1
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 0

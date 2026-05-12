@@ -2,15 +2,22 @@ using System;
 using System.Collections;
 using UnityEngine;
 
-[RequireComponent(typeof(SpriteRenderer), typeof(Collider2D))]
+[RequireComponent(typeof(SpriteRenderer), typeof(Collider2D), typeof(Animator))]
 public class DangerZoneController : MonoBehaviour
 {
   private GameConfig gameConfig;
   private PrefabPool objectPool;
   private SpriteRenderer sr;
   private Coroutine lifetimeCoroutine;
-  private Coroutine blinkCoroutine;
+  private Coroutine releaseCoroutine;
   private bool hasDamaged;
+
+  private readonly int HitTriggerHash = Animator.StringToHash("Hit");
+
+  [SerializeField] private float hitAnimationDuration = 1.5f;
+  [SerializeField] private bool spriteFacesRightByDefault = true;
+
+  private Animator animator;
 
   public event Action<DangerZoneController> PlayerDamaged;
 
@@ -20,6 +27,7 @@ public class DangerZoneController : MonoBehaviour
   {
     gameConfig = config;
     hasDamaged = false;
+    StopCoroutineSafe(ref releaseCoroutine);
 
     if (gameConfig == null)
     {
@@ -29,12 +37,13 @@ public class DangerZoneController : MonoBehaviour
     }
 
     lifetimeCoroutine = StartCoroutine(LifetimeRoutine());
-    blinkCoroutine = StartCoroutine(BlinkRoutine());
   }
 
   private void OnTriggerEnter2D(Collider2D other)
   {
     if (!other.CompareTag("Player")) return;
+    FacePlayer(GetColliderRoot(other));
+
     if (hasDamaged) return;
     hasDamaged = true;
     DamageAndRelease();
@@ -49,8 +58,23 @@ public class DangerZoneController : MonoBehaviour
   private void DamageAndRelease()
   {
     StopCoroutineSafe(ref lifetimeCoroutine);
-    StopCoroutineSafe(ref blinkCoroutine);
+    animator.SetTrigger(HitTriggerHash);
     PlayerDamaged?.Invoke(this);
+
+    if (hitAnimationDuration > 0f && isActiveAndEnabled)
+    {
+      releaseCoroutine = StartCoroutine(DelayedRelease(hitAnimationDuration));
+      return;
+    }
+
+    // Release();
+  }
+
+  private IEnumerator DelayedRelease(float delay)
+  {
+    yield return new WaitForSeconds(delay);
+
+    releaseCoroutine = null;
     Release();
   }
 
@@ -72,22 +96,23 @@ public class DangerZoneController : MonoBehaviour
   private void Awake()
   {
     sr = GetComponent<SpriteRenderer>();
+    animator = GetComponent<Animator>();
+  }
+
+  private Transform GetColliderRoot(Collider2D other)
+  {
+    return other.attachedRigidbody != null ? other.attachedRigidbody.transform : other.transform;
+  }
+
+  private void FacePlayer(Transform player)
+  {
+    bool playerIsRight = player.position.x > transform.position.x;
+    sr.flipX = spriteFacesRightByDefault ? !playerIsRight : playerIsRight;
   }
 
   private void OnDisable()
   {
     StopCoroutineSafe(ref lifetimeCoroutine);
-    StopCoroutineSafe(ref blinkCoroutine);
-  }
-
-  private IEnumerator BlinkRoutine()
-  {
-    while (true)
-    {
-      Color c = sr.color;
-      c.a = c.a > 0.5f ? 0.15f : 1f;
-      sr.color = c;
-      yield return new WaitForSeconds(gameConfig.DangerZoneBlinkInterval);
-    }
+    StopCoroutineSafe(ref releaseCoroutine);
   }
 }
