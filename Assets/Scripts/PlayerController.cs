@@ -72,13 +72,25 @@ public class PlayerController : MonoBehaviour
       defaultSpriteColor = spriteRenderer.color;
 
     if (gameManager != null)
+    {
       gameManager.PlayerDamaged += OnPlayerDamaged;
+      gameManager.GameOver += OnGameOver;
+    }
   }
 
   private void OnDestroy()
   {
     if (gameManager != null)
+    {
       gameManager.PlayerDamaged -= OnPlayerDamaged;
+      gameManager.GameOver -= OnGameOver;
+    }
+  }
+
+  private void OnGameOver()
+  {
+    if (!isActiveAndEnabled) return;
+    TriggerDeath();
   }
 
   public void Initialize()
@@ -189,6 +201,10 @@ public class PlayerController : MonoBehaviour
   public void TriggerDeath()
   {
     StopDamageFeedback();
+
+    // Prevent further movement after death
+    rb.linearVelocity = Vector2.zero;
+    rb.bodyType = RigidbodyType2D.Kinematic;
 
     if (playerAnimator != null)
       playerAnimator.SetTrigger(DeathHash);

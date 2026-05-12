@@ -8,6 +8,7 @@ public class SoldierController : MonoBehaviour
   public enum RescueSoldierResult { Rescued, Dead }
 
   [SerializeField] private Animator animator;
+  [SerializeField] private float animationDuration = 0.5f;
 
   private GameConfig gameConfig;
   private bool isCompleted;
@@ -75,13 +76,20 @@ public class SoldierController : MonoBehaviour
     if (isCompleted) return;
 
     isCompleted = true;
-    currentTransitionId++;
     StopCoroutineSafe(ref lifetimeCoroutine);
 
     if (animator != null)
       animator.SetTrigger(result == RescueSoldierResult.Rescued ? "Rescued" : "Dead");
 
     Completed?.Invoke(this, result);
+
+    // Delay release to allow animation to play before returning to pool
+    StartCoroutine(DelayedRelease(animationDuration));
+  }
+
+  private IEnumerator DelayedRelease(float delay)
+  {
+    yield return new WaitForSeconds(delay);
     Release();
   }
 
