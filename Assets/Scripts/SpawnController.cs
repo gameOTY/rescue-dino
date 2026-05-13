@@ -10,6 +10,7 @@ public class SpawnController : MonoBehaviour
   [SerializeField] private PrefabPool soldierPool;
   [SerializeField] private GameManager gameManager;
   [SerializeField] private SoldierTracker soldierTracker;
+  [SerializeField] private DangerZoneSpawner dangerZoneSpawner;
   [SerializeField] private GameConfig gameConfig;
 
   public GameConfig Config => gameConfig;
@@ -90,8 +91,20 @@ public class SpawnController : MonoBehaviour
       return;
     }
 
-    activeTargetCount++;
     Vector3Int spawnCell = spawnArea.WorldToCell(spawnPosition);
+
+    if (dangerZoneSpawner != null)
+    {
+      HashSet<Vector3Int> dangerZoneCells = dangerZoneSpawner.GetDangerZoneCells(spawnArea);
+
+      if (dangerZoneCells.Contains(spawnCell))
+      {
+        Debug.LogWarning("Cannot spawn soldier in a danger zone cell.");
+        return;
+      }
+    }
+
+    activeTargetCount++;
     occupiedCells.Add(spawnCell);
 
     GameObject spawnedObject = soldierPool.Get();

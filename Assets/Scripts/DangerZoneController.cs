@@ -20,6 +20,7 @@ public class DangerZoneController : MonoBehaviour
   private Animator animator;
 
   public event Action<DangerZoneController> PlayerDamaged;
+  public event Action<DangerZoneController> Completed;
 
   public void SetPool(PrefabPool pool) => objectPool = pool;
 
@@ -80,6 +81,7 @@ public class DangerZoneController : MonoBehaviour
 
   private void Release()
   {
+    Completed?.Invoke(this);
     if (objectPool != null)
       objectPool.Release(gameObject);
     else

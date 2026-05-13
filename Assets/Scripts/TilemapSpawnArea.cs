@@ -113,4 +113,6 @@ public class TilemapSpawnArea : MonoBehaviour
     }
     return floorTilemap.WorldToCell(worldPosition);
   }
+
+  public float CellSize => floorTilemap != null ? floorTilemap.cellSize.x : 1f;
 }

@@ -5,6 +5,34 @@ public class SoldierTracker : MonoBehaviour
 {
     private readonly List<Transform> _activeSoldiers = new();
 
+    public HashSet<Vector3Int> GetRescueZoneCells(float rescueZoneRadius, TilemapSpawnArea spawnArea)
+    {
+        var cells = new HashSet<Vector3Int>();
+
+        foreach (var soldier in _activeSoldiers)
+        {
+            if (soldier == null) continue;
+
+            Vector3 worldPos = soldier.position;
+            Vector3Int centerCell = spawnArea.WorldToCell(worldPos);
+
+            cells.Add(centerCell);
+
+            float radiusInCells = rescueZoneRadius / spawnArea.CellSize;
+            int radiusInt = Mathf.CeilToInt(radiusInCells);
+
+            for (int dx = -radiusInt; dx <= radiusInt; dx++)
+            {
+                for (int dy = -radiusInt; dy <= radiusInt; dy++)
+                {
+                    cells.Add(new Vector3Int(centerCell.x + dx, centerCell.y + dy, 0));
+                }
+            }
+        }
+
+        return cells;
+    }
+
     public bool TryGetNearestSoldier(Transform player, out Vector3 nearestPosition)
     {
         nearestPosition = Vector3.zero;
