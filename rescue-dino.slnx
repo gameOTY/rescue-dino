@@ -3,8 +3,8 @@
   <Project Path="Unity.RenderPipelines.GPUDriven.Runtime.csproj" />
   <Project Path="Unity.PlasticSCM.Editor.csproj" />
   <Project Path="Unity.2D.Aseprite.Editor.csproj" />
-  <Project Path="MCPForUnity.Runtime.csproj" />
   <Project Path="Unity.Services.Core.Internal.csproj" />
+  <Project Path="MCPForUnity.Runtime.csproj" />
   <Project Path="Unity.ShaderGraph.Editor.csproj" />
   <Project Path="Unity.RenderPipelines.Core.Runtime.csproj" />
   <Project Path="Unity.Mathematics.csproj" />
