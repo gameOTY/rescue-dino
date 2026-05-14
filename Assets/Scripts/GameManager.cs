@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
   private const string HighScoreKey = "RescueDino.HighScore";
+  public static GameManager Instance { get; private set; }
 
   [Header("Game Rules")]
   [SerializeField] private GameConfig gameConfig;
@@ -18,6 +19,7 @@ public class GameManager : MonoBehaviour
   public float TimeRemaining { get; private set; }
   public bool IsGameOver { get; private set; }
   public bool IsWon { get; private set; }
+  public bool IsPaused { get; private set; }
   public bool IsTerminal => IsGameOver || IsWon;
 
   public int CurrentScore => SoldiersRescued;
@@ -31,6 +33,8 @@ public class GameManager : MonoBehaviour
 
   private void Awake()
   {
+    Instance = this;
+
     if (Config == null)
     {
       throw new Exception("GameConfig reference is missing in GameManager.");
@@ -42,7 +46,7 @@ public class GameManager : MonoBehaviour
 
   private void Update()
   {
-    if (IsTerminal) return;
+    if (IsTerminal || IsPaused) return;
 
     TimeRemaining -= Time.deltaTime;
     if (TimeRemaining <= 0f)
@@ -54,16 +58,20 @@ public class GameManager : MonoBehaviour
 
   public void ResetRuntimeState()
   {
+    ResumeGame();
     PlayerHealth = Config.DeathLimit;
     SoldiersRescued = 0;
     SoldiersDied = 0;
     TimeRemaining = Config.SurviveDuration;
     IsGameOver = false;
     IsWon = false;
+    IsPaused = false;
   }
 
   public void StartNewGame()
   {
+    ResumeGame();
+
     Scene activeScene = SceneManager.GetActiveScene();
     if (activeScene.buildIndex >= 0)
     {
@@ -78,17 +86,45 @@ public class GameManager : MonoBehaviour
 
   public event Action GameOver;
   public event Action<int, string> PlayerDamaged;
+  public event Action<bool> PauseStateChanged;
+
+  public bool PauseGame()
+  {
+    if (IsTerminal || IsPaused) return false;
+
+    IsPaused = true;
+    PauseStateChanged?.Invoke(true);
+    return true;
+  }
+
+  public bool ResumeGame()
+  {
+    if (!IsPaused)
+      return false;
+
+    IsPaused = false;
+    PauseStateChanged?.Invoke(false);
+    return true;
+  }
+
+  public void TogglePause()
+  {
+    if (IsPaused)
+      ResumeGame();
+    else
+      PauseGame();
+  }
 
   public void RegisterRescued()
   {
-    if (IsGameOver) return;
+    if (IsTerminal || IsPaused) return;
 
     ++SoldiersRescued;
   }
 
   public void RegisterDead()
   {
-    if (IsGameOver) return;
+    if (IsTerminal || IsPaused) return;
 
     ++SoldiersDied;
     RegisterDamage(1, "soldier died");
@@ -96,7 +132,7 @@ public class GameManager : MonoBehaviour
 
   public void RegisterDamage(int amount, string reason = "unknown")
   {
-    if (IsTerminal) return;
+    if (IsTerminal || IsPaused) return;
 
     PlayerHealth -= amount;
     PlayerDamaged?.Invoke(amount, reason);
@@ -113,6 +149,7 @@ public class GameManager : MonoBehaviour
     if (IsGameOver) return;
 
     IsGameOver = true;
+    ResumeGame();
     SaveHighScoreIfNeeded();
     GameOver?.Invoke();
   }
@@ -122,6 +159,7 @@ public class GameManager : MonoBehaviour
     if (IsWon) return;
 
     IsWon = true;
+    ResumeGame();
     SaveHighScoreIfNeeded();
   }
 
@@ -132,5 +170,11 @@ public class GameManager : MonoBehaviour
     HighScore = CurrentScore;
     PlayerPrefs.SetInt(HighScoreKey, HighScore);
     PlayerPrefs.Save();
+  }
+
+  private void OnDestroy()
+  {
+    if (Instance == this)
+      Instance = null;
   }
 }

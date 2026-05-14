@@ -5,6 +5,18 @@ using UnityEngine.UI;
 public class MainMenuUI : MonoBehaviour
 {
     [SerializeField] private GameObject settingsPanel;
+    [SerializeField] private Toggle fullscreenToggle;
+
+    private void Start()
+    {
+        SettingsPreferences.ApplySavedFullscreen();
+
+        if (fullscreenToggle == null && settingsPanel != null)
+            fullscreenToggle = settingsPanel.GetComponentInChildren<Toggle>(true);
+
+        if (fullscreenToggle != null)
+            fullscreenToggle.SetIsOnWithoutNotify(SettingsPreferences.IsFullscreenEnabled());
+    }
 
     public void OnStartPressed()
     {
@@ -24,9 +36,7 @@ public class MainMenuUI : MonoBehaviour
 
     public void OnFullscreenToggled(bool isOn)
     {
-        Screen.fullScreen = isOn;
-        PlayerPrefs.SetInt("Fullscreen", isOn ? 1 : 0);
-        PlayerPrefs.Save();
+        SettingsPreferences.SetFullscreen(isOn);
 
         if (settingsPanel != null)
             settingsPanel.SetActive(false);

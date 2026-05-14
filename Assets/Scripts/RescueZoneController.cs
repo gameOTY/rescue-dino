@@ -75,6 +75,9 @@ public class RescueZoneController : MonoBehaviour
     if (!IsPlayerCollider(other))
       return;
 
+    if (IsGamePaused())
+      return;
+
     playerColliderCountInside++;
 
     RefreshZoneVisualVisibility();
@@ -96,6 +99,9 @@ public class RescueZoneController : MonoBehaviour
   private void OnTriggerExit2D(Collider2D other)
   {
     if (!IsPlayerCollider(other))
+      return;
+
+    if (IsGamePaused())
       return;
 
     playerColliderCountInside = Mathf.Max(0, playerColliderCountInside - 1);
@@ -155,8 +161,11 @@ public class RescueZoneController : MonoBehaviour
       if (!HasPlayerInside())
         yield break;
 
-      currentElapsedSeconds += Time.deltaTime;
-      ElapsedRescueTime = currentElapsedSeconds;
+      if (!IsGamePaused())
+      {
+        currentElapsedSeconds += Time.deltaTime;
+        ElapsedRescueTime = currentElapsedSeconds;
+      }
 
       yield return null;
     }
@@ -267,5 +276,10 @@ public class RescueZoneController : MonoBehaviour
   private bool IsCurrentRescueSession(int sessionVersion)
   {
     return sessionVersion == rescueSessionVersion;
+  }
+
+  private bool IsGamePaused()
+  {
+    return GameManager.Instance != null && GameManager.Instance.IsPaused;
   }
 }

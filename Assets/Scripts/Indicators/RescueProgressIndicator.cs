@@ -42,6 +42,9 @@ namespace RescueGame
       {
         _progressRingImage.gameObject.SetActive(true);
         _progressRingImage.fillAmount = 0f;
+        Color c = _progressRingImage.color;
+        c.a = 1f;
+        _progressRingImage.color = c;
       }
     }
 
@@ -65,6 +68,13 @@ namespace RescueGame
     {
       _isRunning = false;
       StopCoroutineRef();
+
+      if (_progressRingImage != null)
+      {
+        Color c = _progressRingImage.color;
+        c.a = 0.4f;
+        _progressRingImage.color = c;
+      }
     }
 
     public void Hide()
@@ -86,6 +96,9 @@ namespace RescueGame
       {
         _progressRingImage.gameObject.SetActive(true);
         _progressRingImage.fillAmount = _currentProgress;
+        Color c = _progressRingImage.color;
+        c.a = 1f;
+        _progressRingImage.color = c;
       }
 
       RestartCoroutine();
@@ -122,9 +135,12 @@ namespace RescueGame
       {
         if (_isRunning)
         {
-          _elapsedTime += Time.deltaTime;
-          _currentProgress = Mathf.Clamp01(_elapsedTime / _rescueDuration);
-          _progressRingImage.fillAmount = _currentProgress;
+          if (!IsGamePaused())
+          {
+            _elapsedTime += Time.deltaTime;
+            _currentProgress = Mathf.Clamp01(_elapsedTime / _rescueDuration);
+            _progressRingImage.fillAmount = _currentProgress;
+          }
         }
 
         yield return null;
@@ -141,6 +157,11 @@ namespace RescueGame
     {
       _isRunning = false;
       StopCoroutineRef();
+    }
+
+    private bool IsGamePaused()
+    {
+      return GameManager.Instance != null && GameManager.Instance.IsPaused;
     }
   }
 }

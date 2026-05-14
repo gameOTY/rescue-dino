@@ -70,7 +70,7 @@ public class SoldierController : MonoBehaviour
 
   private IEnumerator LifetimeCountdown()
   {
-    yield return new WaitForSeconds(gameConfig.SoldierLifetime);
+    yield return WaitForGameplaySeconds(gameConfig.SoldierLifetime);
     Complete(RescueSoldierResult.Dead);
   }
 
@@ -102,13 +102,25 @@ public class SoldierController : MonoBehaviour
 
   private IEnumerator DelayedRelease(float delay, int transitionId)
   {
-    yield return new WaitForSeconds(delay);
+    yield return WaitForGameplaySeconds(delay);
 
     if (transitionId != currentTransitionId)
       yield break;
 
     releaseCoroutine = null;
     Release();
+  }
+
+  private IEnumerator WaitForGameplaySeconds(float seconds)
+  {
+    float elapsed = 0f;
+    while (elapsed < seconds)
+    {
+      if (!IsGamePaused())
+        elapsed += Time.deltaTime;
+
+      yield return null;
+    }
   }
 
   private void Release()
@@ -141,5 +153,10 @@ public class SoldierController : MonoBehaviour
 
     animator.Play(stateHash, 0, 0f);
     animator.Update(0f);
+  }
+
+  private bool IsGamePaused()
+  {
+    return GameManager.Instance != null && GameManager.Instance.IsPaused;
   }
 }

@@ -19,6 +19,20 @@ public class HUDController : MonoBehaviour
   [SerializeField] private TMP_Text endHighScoreText;
   [SerializeField] private Button newGameButton;
 
+  [Header("Pause Menu")]
+  [SerializeField] private Canvas pauseOverlayCanvas;
+  [SerializeField] private Button pauseButton;
+  [SerializeField] private GameObject pausePanel;
+  [SerializeField] private Button resumeButton;
+  [SerializeField] private Button pauseSettingsButton;
+  [SerializeField] private Button pauseRestartButton;
+  [SerializeField] private Button pauseMainMenuButton;
+
+  [Header("In-Game Settings")]
+  [SerializeField] private GameObject settingsPanel;
+  [SerializeField] private Toggle fullscreenToggle;
+  [SerializeField] private Button settingsBackButton;
+
   [Header("RectTransform References")]
   [SerializeField] private RectTransform rescuedRect;
   [SerializeField] private RectTransform diedRect;
@@ -38,6 +52,7 @@ public class HUDController : MonoBehaviour
   [SerializeField] private Image edgeIndicatorImage;
   [SerializeField] private SoldierTracker soldierTracker;
   [SerializeField] private Canvas hudCanvas;
+  [SerializeField] private GameObject player;
 
   private Camera _mainCamera;
   private float _pulsePhase;
@@ -54,20 +69,29 @@ public class HUDController : MonoBehaviour
     }
 
     _mainCamera = Camera.main;
+    if (player == null) player = GameObject.FindGameObjectWithTag("Player");
     if (edgeIndicatorImage != null)
       edgeIndicatorImage.enabled = false;
 
+    SettingsPreferences.ApplySavedFullscreen();
     RegisterNewGameButton(newGameButton);
+    RegisterPauseButtons();
+    UpdatePauseUi();
   }
 
   private void Update()
   {
     bool isEndScreenVisible = gameManager.IsTerminal;
+    if (isEndScreenVisible && gameManager.IsPaused)
+      gameManager.ResumeGame();
+
     if (endPanel != null)
       endPanel.SetActive(isEndScreenVisible);
 
     if (isEndScreenVisible)
       UpdateEndScreen();
+
+    UpdatePauseUi();
 
     rescuedText.text = "Rescued: " + gameManager.SoldiersRescued;
     diedText.text = "Died: " + gameManager.SoldiersDied;
@@ -99,6 +123,56 @@ public class HUDController : MonoBehaviour
     SceneManager.LoadScene(activeScene.name);
   }
 
+  public void OnPausePressed()
+  {
+    if (gameManager != null && gameManager.PauseGame())
+      UpdatePauseUi();
+  }
+
+  public void OnResumePressed()
+  {
+    if (gameManager != null)
+      gameManager.ResumeGame();
+
+    UpdatePauseUi();
+  }
+
+  public void OnPauseSettingsPressed()
+  {
+    if (gameManager == null || !gameManager.IsPaused || gameManager.IsTerminal)
+      return;
+
+    if (fullscreenToggle != null)
+      fullscreenToggle.SetIsOnWithoutNotify(SettingsPreferences.IsFullscreenEnabled());
+
+    if (pausePanel != null)
+      pausePanel.SetActive(false);
+
+    if (settingsPanel != null)
+      settingsPanel.SetActive(true);
+  }
+
+  public void OnSettingsBackPressed()
+  {
+    if (settingsPanel != null)
+      settingsPanel.SetActive(false);
+
+    UpdatePauseUi();
+  }
+
+  public void OnFullscreenToggled(bool isOn)
+  {
+    SettingsPreferences.SetFullscreen(isOn);
+  }
+
+  public void OnMainMenuPressed()
+  {
+    if (gameManager != null)
+      gameManager.ResumeGame();
+
+    SceneManager.LoadScene("MainMenu");
+  }
+
   private void RegisterNewGameButton(Button button)
   {
     if (button == null) return;
@@ -106,6 +180,51 @@ public class HUDController : MonoBehaviour
     button.onClick.RemoveListener(OnNewGamePressed);
     if (button.onClick.GetPersistentEventCount() == 0)
       button.onClick.AddListener(OnNewGamePressed);
+  }
+
+  private void RegisterPauseButtons()
+  {
+    RegisterButton(pauseButton, OnPausePressed);
+    RegisterButton(resumeButton, OnResumePressed);
+    RegisterButton(pauseSettingsButton, OnPauseSettingsPressed);
+    RegisterButton(pauseRestartButton, OnNewGamePressed);
+    RegisterButton(pauseMainMenuButton, OnMainMenuPressed);
+    RegisterButton(settingsBackButton, OnSettingsBackPressed);
+
+    if (fullscreenToggle != null)
+    {
+      fullscreenToggle.onValueChanged.RemoveListener(OnFullscreenToggled);
+      fullscreenToggle.onValueChanged.AddListener(OnFullscreenToggled);
+      fullscreenToggle.SetIsOnWithoutNotify(SettingsPreferences.IsFullscreenEnabled());
+    }
+  }
+
+  private void RegisterButton(Button button, UnityEngine.Events.UnityAction action)
+  {
+    if (button == null) return;
+
+    button.onClick.RemoveListener(action);
+    if (button.onClick.GetPersistentEventCount() == 0)
+      button.onClick.AddListener(action);
+  }
+
+  private void UpdatePauseUi()
+  {
+    if (gameManager == null) return;
+
+    bool canPause = !gameManager.IsTerminal;
+    if (pauseOverlayCanvas != null)
+      pauseOverlayCanvas.gameObject.SetActive(canPause || gameManager.IsPaused);
+
+    if (pauseButton != null)
+      pauseButton.gameObject.SetActive(canPause && !gameManager.IsPaused);
+
+    bool showingSettings = settingsPanel != null && settingsPanel.activeSelf;
+    if (pausePanel != null)
+      pausePanel.SetActive(canPause && gameManager.IsPaused && !showingSettings);
+
+    if (!canPause && settingsPanel != null)
+      settingsPanel.SetActive(false);
   }
 
   private void UpdateEndScreen()
@@ -125,7 +244,6 @@ public class HUDController : MonoBehaviour
     if (edgeIndicatorImage == null || soldierTracker == null || _mainCamera == null || hudCanvas == null)
       return;
 
-    GameObject player = GameObject.FindGameObjectWithTag("Player");
     if (player == null) return;
 
     if (!soldierTracker.TryGetNearestSoldier(player.transform, out Vector3 soldierWorldPos))

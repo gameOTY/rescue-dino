@@ -102,7 +102,7 @@ public class PlayerController : MonoBehaviour
 
   private void Update()
   {
-    if (gameManager.IsTerminal) return;
+    if (gameManager == null || gameManager.IsTerminal || gameManager.IsPaused) return;
 
     if (clickAction.WasPerformedThisFrame())
     {
@@ -115,8 +115,9 @@ public class PlayerController : MonoBehaviour
 
   private void FixedUpdate()
   {
-    if (gameManager.IsTerminal)
+    if (gameManager == null || gameManager.IsTerminal || gameManager.IsPaused)
     {
+      SetAnimation("Idle");
       return;
     }
 
@@ -230,6 +231,12 @@ public class PlayerController : MonoBehaviour
 
     while (elapsed < duration)
     {
+      if (gameManager != null && gameManager.IsPaused)
+      {
+        yield return null;
+        continue;
+      }
+
       elapsed += Time.deltaTime;
 
       if (spriteRenderer != null)

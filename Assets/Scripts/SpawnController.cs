@@ -36,7 +36,13 @@ public class SpawnController : MonoBehaviour
 
   private float GetCurrentSpawnInterval()
   {
-    float elapsedTime = Time.timeSinceLevelLoad;
+    // Spawn decay formula: interval = max(MinSpawnInterval, SoldierSpawnInterval - SoliderSpawnDecayRate * elapsedTime)
+    // At 30s: soldier interval = 5 - 0.1*30 = 2s (equals danger zone's 2s interval)
+    // At 60s: interval = 5 - 0.1*60 = 5 - 6 = -1, clamped to 0.5s floor (4x faster than danger zone)
+    //
+    // The 0.5s floor prevents impossible spawn rates.
+    // Target: 1s floor would maintain 2:1 ratio against danger zone's 2s interval.
+    float elapsedTime = gameManager != null ? gameManager.TotalTime - gameManager.TimeRemaining : Time.timeSinceLevelLoad;
     return Mathf.Max(
       Config.MinSpawnInterval,
       Config.SoldierSpawnInterval - Config.SoliderSpawnDecayRate * elapsedTime
@@ -59,7 +65,12 @@ public class SpawnController : MonoBehaviour
 
     while (!gameManager.IsTerminal)
     {
-      yield return new WaitForSeconds(GetCurrentSpawnInterval());
+      if (gameManager == null) yield break;
+
+      yield return WaitForGameplaySeconds(GetCurrentSpawnInterval());
+
+      if (gameManager.IsPaused)
+        continue;
 
       if (!spawnArea.IsReady)
       {
@@ -73,8 +84,26 @@ public class SpawnController : MonoBehaviour
     }
   }
 
+  private IEnumerator WaitForGameplaySeconds(float seconds)
+  {
+    float elapsed = 0f;
+    while (elapsed < seconds)
+    {
+      if (gameManager == null || !gameManager.IsPaused)
+        elapsed += Time.deltaTime;
+
+      yield return null;
+    }
+  }
+
   private void SpawnSoldier()
   {
+    // Exclusion policy: soldiers are NOT spawned inside active danger zone cells.
+    // This protects newly-spawned soldiers from instant damage.
+    //
+    // Note: Danger zones do NOT exclude rescue zones when spawning — this is intentional asymmetry.
+    // Reason: rescue zones are transient (player-activated) and blocking them would reduce spawn options
+    // as gameplay progresses. The danger zone's short lifetime (3s) means exclusion is brief.
     if (activeTargetCount >= Config.MaxActiveSoldiers)
     {
       return;
@@ -115,10 +144,6 @@ public class SpawnController : MonoBehaviour
 
     if (spawnedObject.TryGetComponent<TargetIndicatorController>(out var indicator))
     {
-      if (indicator == null)
-      {
-        Debug.LogWarning($"[SpawnController] Spawned object '{spawnedObject.name}' does not have a TargetIndicatorController component.");
-      }
       indicator.Initialize(Config.RescueTime, Config.SoldierLifetime);
     }
 
@@ -141,11 +166,11 @@ public class SpawnController : MonoBehaviour
     switch (result)
     {
       case SoldierController.RescueSoldierResult.Rescued:
-        gameManager.RegisterRescued();
+        gameManager?.RegisterRescued();
         break;
 
       case SoldierController.RescueSoldierResult.Dead:
-        gameManager.RegisterDead();
+        gameManager?.RegisterDead();
         break;
     }
   }

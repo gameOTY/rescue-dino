@@ -41,7 +41,10 @@ public class DangerZoneSpawner : MonoBehaviour
 
     while (!gameManager.IsTerminal)
     {
-      yield return new WaitForSeconds(gameConfig.DangerZoneSpawnInterval);
+      yield return WaitForGameplaySeconds(gameConfig.DangerZoneSpawnInterval);
+
+      if (gameManager.IsPaused)
+        continue;
 
       if (!spawnArea.IsReady)
       {
@@ -53,6 +56,18 @@ public class DangerZoneSpawner : MonoBehaviour
         continue;
 
       SpawnZone();
+    }
+  }
+
+  private IEnumerator WaitForGameplaySeconds(float seconds)
+  {
+    float elapsed = 0f;
+    while (elapsed < seconds)
+    {
+      if (gameManager == null || !gameManager.IsPaused)
+        elapsed += Time.deltaTime;
+
+      yield return null;
     }
   }
 

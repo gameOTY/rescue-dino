@@ -43,6 +43,8 @@ public class DangerZoneController : MonoBehaviour
   private void OnTriggerEnter2D(Collider2D other)
   {
     if (!other.CompareTag("Player")) return;
+    if (IsGamePaused()) return;
+
     FacePlayer(GetColliderRoot(other));
 
     if (hasDamaged) return;
@@ -52,7 +54,7 @@ public class DangerZoneController : MonoBehaviour
 
   private IEnumerator LifetimeRoutine()
   {
-    yield return new WaitForSeconds(gameConfig.DangerZoneLifetime);
+    yield return WaitForGameplaySeconds(gameConfig.DangerZoneLifetime);
     Release();
   }
 
@@ -73,10 +75,22 @@ public class DangerZoneController : MonoBehaviour
 
   private IEnumerator DelayedRelease(float delay)
   {
-    yield return new WaitForSeconds(delay);
+    yield return WaitForGameplaySeconds(delay);
 
     releaseCoroutine = null;
     Release();
+  }
+
+  private IEnumerator WaitForGameplaySeconds(float seconds)
+  {
+    float elapsed = 0f;
+    while (elapsed < seconds)
+    {
+      if (!IsGamePaused())
+        elapsed += Time.deltaTime;
+
+      yield return null;
+    }
   }
 
   private void Release()
@@ -116,5 +130,12 @@ public class DangerZoneController : MonoBehaviour
   {
     StopCoroutineSafe(ref lifetimeCoroutine);
     StopCoroutineSafe(ref releaseCoroutine);
+  }
+
+  // Guard: GameManager singleton initialized by SceneBootstrap before danger zones
+  // spawn. Null-check here handles edge case during scene transitions.
+  private bool IsGamePaused()
+  {
+    return GameManager.Instance != null && GameManager.Instance.IsPaused;
   }
 }
