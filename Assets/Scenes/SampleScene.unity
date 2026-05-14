@@ -698,6 +698,7 @@ MonoBehaviour:
   edgeIndicatorImage: {fileID: 1803309280}
   soldierTracker: {fileID: 1596496488}
   hudCanvas: {fileID: 264822806}
+  player: {fileID: 0}
 --- !u!114 &264822804
 MonoBehaviour:
   m_ObjectHideFlags: 0
